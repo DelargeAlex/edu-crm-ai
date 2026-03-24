@@ -57,6 +57,31 @@
       font-size: clamp(1rem, 2vw, 1.2rem);
     }
 
+    .hero-image {
+      margin: 0 0 1.5rem;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+
+    .hero-image img {
+      display: block;
+      width: 100%;
+      height: clamp(140px, 26vw, 240px);
+      object-fit: cover;
+    }
+
+    .hero-image--top img {
+      object-position: center 15%;
+    }
+
+    .hero-image--bottom img {
+      object-position: center 75%;
+    }
+
     .cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -121,6 +146,34 @@
       font-size: 0.96rem;
     }
 
+    .download-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 0 0 1.5rem;
+    }
+
+    .download-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: #0f172a;
+      font-weight: 700;
+      padding: 0.75rem 1.2rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 12px 24px rgba(2, 6, 23, 0.35);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .download-button:hover,
+    .download-button:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 30px rgba(2, 6, 23, 0.5);
+      outline: none;
+    }
+
     .footer {
       margin-top: 1.5rem;
       text-align: center;
@@ -132,10 +185,23 @@
 </head>
 <body>
   <main class="container">
+    <figure class="hero-image hero-image--top">
+      <img src="./figures/theme_image.webp" alt="Temabild för kursens AI- och CRM-stack, övre halva" />
+    </figure>
+
     <header class="header">
       <h1>Leadhantering, AI och lokal integrationsstack</h1>
       <p class="subtitle">Lektion 1 bygger förståelse för problemdomän och arkitektur. Lektion 2 tar vid med felsökning, runtime och labb. Den nya miljöguiden hjälper er att starta samma Docker-miljö lokalt på macOS och Windows.</p>
     </header>
+
+    <div class="download-wrap">
+      <a
+        class="download-button"
+        href="https://github.com/DelargeAlex/edu-crm-ai/releases/download/v1.0.0/edu-crm-ai-v1.0.0.zip"
+      >
+        Ladda ner projektet (ZIP)
+      </a>
+    </div>
 
     <section class="cards cards--single">
       <a class="card" href="./docker-compose-kom-igang.html">
@@ -160,6 +226,10 @@
         <p>Statuskoder, n8n executions, miljövariabler, Flowise, Twenty, Chatwoot och strukturerad felsökning i Bosses-caset.</p>
       </a>
     </section>
+
+    <figure class="hero-image hero-image--bottom">
+      <img src="./figures/theme_image.webp" alt="Temabild för kursens AI- och CRM-stack, nedre halva" />
+    </figure>
 
     <p class="footer">Presentationsindex för kursens två steg plus en praktisk guide till dockermiljön.</p>
   </main>

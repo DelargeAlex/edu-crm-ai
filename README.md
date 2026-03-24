@@ -2,6 +2,8 @@
 
 Minimal, **pedagogical** Docker stack: **n8n** (orchestration), **Flowise** (AI), **Chatwoot** (support UI), **Twenty** (CRM), plus ett medvetet fult **legacy SQLite-case** for regex-övningar. Not intended for production.
 
+Hosted demo page: [edu-retrobymistake-production-eu-north-1](http://edu-retrobymistake-production-eu-north-1.s3-website.eu-north-1.amazonaws.com/)
+
 ---
 
 # English
