@@ -30,6 +30,9 @@ venv/
 *.pid
 *.sqlite
 *.db
+flowise/.flowise/*
+!flowise/.flowise/.gitkeep
+föreläsning/
 
 # Docker / local volumes and temp
 .docker/

@@ -39,6 +39,7 @@ services:
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: admin
       N8N_BASIC_AUTH_PASSWORD: admin
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
       WEBHOOK_URL: http://localhost:5678/
       GENERIC_TIMEZONE: Europe/Stockholm
       TZ: Europe/Stockholm
@@ -46,14 +47,14 @@ services:
       TWENTY_API_BASE: http://twenty:3000
       TWENTY_API_KEY: ${TWENTY_API_KEY:-}
       # Legacy fallback: workflows fall back to this if more specific ids are empty.
-      FLOWISE_CHATFLOW_ID: change_me_legacy_fallback
+      FLOWISE_CHATFLOW_ID: ${FLOWISE_CHATFLOW_ID:-}
       # Bosses Akvariefiskar: anvand separata chatflows for olika uppgifter.
-      FLOWISE_LEAD_CHATFLOW_ID: change_me_lead
-      FLOWISE_SUPPORT_CHATFLOW_ID: change_me_support
-      FLOWISE_CHATWOOT_CHATFLOW_ID: change_me_chatwoot
+      FLOWISE_LEAD_CHATFLOW_ID: ${FLOWISE_LEAD_CHATFLOW_ID:-}
+      FLOWISE_SUPPORT_CHATFLOW_ID: ${FLOWISE_SUPPORT_CHATFLOW_ID:-}
+      FLOWISE_CHATWOOT_CHATFLOW_ID: ${FLOWISE_CHATWOOT_CHATFLOW_ID:-}
       # Chatwoot → n8n → Flowise → svar tillbaka (se README + n8n/workflows/chatwoot.json)
       CHATWOOT_API_BASE: http://chatwoot-rails:3000
-      CHATWOOT_API_ACCESS_TOKEN: ""
+      CHATWOOT_API_ACCESS_TOKEN: ${CHATWOOT_API_ACCESS_TOKEN:-}
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
@@ -69,7 +70,7 @@ services:
       # Optional: set your key for real AI answers in Flowise
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     volumes:
-      - flowise_data:/root/.flowise
+      - ./flowise/.flowise:/root/.flowise
     restart: unless-stopped
 
   chatwoot-rails:
@@ -229,7 +230,6 @@ services:
 
 volumes:
   n8n_data:
-  flowise_data:
   chatwoot_storage:
   chatwoot_postgres_data:
   chatwoot_redis_data:
