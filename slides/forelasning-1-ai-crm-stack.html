@@ -1,0 +1,1339 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Föreläsning 1 — Från leadproblem till lokal AI + CRM-stack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,480;1,9..144,480&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg0: #08111e;
+        --bg1: #101b31;
+        --card: rgba(16, 24, 45, 0.92);
+        --card-2: rgba(12, 18, 34, 0.9);
+        --text: #edf2ff;
+        --muted: #a7b5d7;
+        --accent: #79f0cb;
+        --accent2: #ffbd73;
+        --accent3: #8ab8ff;
+        --warn: #ffd47f;
+        font-family: "Source Sans 3", system-ui, sans-serif;
+        color: var(--text);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(1100px 640px at 8% 2%, rgba(46, 83, 149, 0.48), transparent 52%),
+          radial-gradient(900px 540px at 92% 10%, rgba(14, 104, 102, 0.28), transparent 48%),
+          linear-gradient(180deg, var(--bg0), var(--bg1));
+      }
+      header.bar {
+        position: fixed;
+        inset: 0 0 auto 0;
+        padding: 0.7rem 1.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background: rgba(6, 10, 18, 0.76);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 5;
+        font-size: 0.92rem;
+      }
+      .bar kbd {
+        font: inherit;
+        padding: 0.12rem 0.45rem;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .progress {
+        flex: 1;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .progress > i {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+      }
+      main {
+        padding: 4.3rem 1.25rem 2.5rem;
+        max-width: 1150px;
+        margin: 0 auto;
+      }
+      .slide {
+        display: none;
+        padding: 2.2rem 2.15rem 2.4rem;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(18, 28, 52, 0.96), rgba(12, 18, 34, 0.96));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 34px 100px rgba(0, 0, 0, 0.42);
+        min-height: min(74vh, 760px);
+      }
+      .slide.is-active {
+        display: block;
+        animation: in 360ms ease-out;
+      }
+      @keyframes in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .eyebrow {
+        margin: 0 0 0.8rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: "Fraunces", Georgia, serif;
+        line-height: 1.12;
+        margin: 0 0 1rem;
+      }
+      h1 {
+        font-size: clamp(2rem, 3.6vw, 3rem);
+      }
+      h2 {
+        font-size: clamp(1.45rem, 2.8vw, 2.15rem);
+      }
+      h3 {
+        font-size: 1.05rem;
+      }
+      p,
+      li {
+        font-size: 1.08rem;
+        line-height: 1.5;
+        color: color-mix(in oklab, var(--text) 87%, var(--muted));
+      }
+      ul {
+        margin: 0.45rem 0 0;
+        padding-left: 1.2rem;
+      }
+      li {
+        margin: 0.4rem 0;
+      }
+      strong {
+        color: var(--text);
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.95em;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
+        gap: 1.5rem;
+        align-items: stretch;
+      }
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-top: 1rem;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.38rem 0.72rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+      .callout {
+        margin-top: 1.15rem;
+        padding: 1rem 1.1rem;
+        border-radius: 16px;
+        border: 1px dashed rgba(121, 240, 203, 0.36);
+        background: rgba(121, 240, 203, 0.08);
+        color: color-mix(in oklab, var(--text) 88%, var(--accent));
+      }
+      .callout.warn {
+        border-color: rgba(255, 212, 127, 0.36);
+        background: rgba(255, 212, 127, 0.08);
+        color: color-mix(in oklab, var(--text) 88%, var(--warn));
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 1.3rem;
+        margin-top: 1rem;
+      }
+      .box {
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .box h3,
+      .box p {
+        margin-top: 0;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .profile-visual {
+        position: relative;
+        min-height: 320px;
+        display: grid;
+        align-items: end;
+        justify-items: center;
+        padding: 1.15rem 1.4rem 0 1rem;
+        border-radius: 22px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background:
+          radial-gradient(120% 140% at 12% 0%, rgba(138, 184, 255, 0.18), transparent 48%),
+          radial-gradient(80% 110% at 100% 100%, rgba(121, 240, 203, 0.16), transparent 42%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(8, 12, 22, 0.24));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      .profile-visual::after {
+        content: "";
+        position: absolute;
+        left: 8%;
+        right: 5%;
+        bottom: -8%;
+        height: 24%;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(4, 7, 14, 0.52), transparent 70%);
+        filter: blur(18px);
+        pointer-events: none;
+      }
+      .profile-visual__person {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 285px);
+        max-height: 290px;
+        object-fit: contain;
+        object-position: center bottom;
+        filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.32));
+      }
+      .profile-visual__dog {
+        position: absolute;
+        right: -0.65rem;
+        bottom: -0.2rem;
+        z-index: 2;
+        width: clamp(130px, 34%, 195px);
+        height: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.28));
+        pointer-events: none;
+      }
+      .profile-visual__caption {
+        position: absolute;
+        left: 1rem;
+        bottom: 1rem;
+        z-index: 3;
+        margin: 0;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(4, 8, 16, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--muted);
+        font-size: 0.82rem;
+        letter-spacing: 0.02em;
+        backdrop-filter: blur(8px);
+      }
+      .slide-figure {
+        --figure-height: clamp(190px, 24vh, 235px);
+        position: relative;
+        margin-top: 1rem;
+        padding: 0.45rem;
+        display: grid;
+        gap: 0.55rem;
+        border-radius: 20px;
+        background:
+          radial-gradient(120% 140% at 10% 0%, rgba(138, 184, 255, 0.12), transparent 48%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      .slide-figure--panel {
+        --figure-height: clamp(245px, 34vh, 320px);
+        margin-top: 0;
+      }
+      .slide-figure--panel-landscape {
+        --figure-height: clamp(205px, 27vh, 245px);
+        margin-top: 0;
+      }
+      .slide-figure--wide-tall {
+        --figure-height: clamp(235px, 30vh, 285px);
+      }
+      .slide-figure__button {
+        position: relative;
+        appearance: none;
+        width: 100%;
+        min-height: var(--figure-height);
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        background:
+          radial-gradient(140% 160% at 10% 0%, rgba(121, 240, 203, 0.1), transparent 42%),
+          linear-gradient(180deg, rgba(5, 9, 18, 0.84), rgba(9, 15, 28, 0.92));
+        display: grid;
+        place-items: center;
+        cursor: zoom-in;
+        overflow: hidden;
+        transition:
+          transform 160ms ease,
+          border-color 160ms ease,
+          box-shadow 160ms ease,
+          background 160ms ease;
+      }
+      .slide-figure__button:hover {
+        transform: translateY(-2px);
+        border-color: rgba(121, 240, 203, 0.34);
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+      }
+      .slide-figure__button:focus-visible {
+        outline: 2px solid rgba(121, 240, 203, 0.7);
+        outline-offset: 3px;
+        border-color: rgba(121, 240, 203, 0.42);
+      }
+      .slide-figure__button::after {
+        content: "Klicka för att förstora";
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        padding: 0.22rem 0.52rem;
+        border-radius: 999px;
+        background: rgba(4, 8, 16, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--muted);
+        font-size: 0.74rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        pointer-events: none;
+      }
+      .slide-figure__button img,
+      .slide-figure > img {
+        display: block;
+        width: 100%;
+        height: var(--figure-height);
+        object-fit: contain;
+        object-position: center;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .slide-figure figcaption {
+        padding: 0.15rem 0.35rem 0.15rem;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.4;
+      }
+      .image-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(4, 8, 16, 0.84);
+        backdrop-filter: blur(14px);
+        z-index: 25;
+      }
+      .image-modal.is-open {
+        display: flex;
+      }
+      .image-modal__dialog {
+        width: min(96vw, 1500px);
+        max-height: 94vh;
+        padding: 0.9rem;
+        border-radius: 24px;
+        background:
+          radial-gradient(120% 160% at 12% 0%, rgba(138, 184, 255, 0.14), transparent 40%),
+          linear-gradient(180deg, rgba(17, 27, 49, 0.98), rgba(9, 15, 28, 0.98));
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 36px 120px rgba(0, 0, 0, 0.5);
+      }
+      .image-modal__top {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 0.4rem;
+      }
+      .image-modal__close {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        padding: 0.42rem 0.82rem;
+        font: inherit;
+        cursor: pointer;
+      }
+      .image-modal__close:hover,
+      .image-modal__close:focus-visible {
+        border-color: rgba(121, 240, 203, 0.32);
+        background: rgba(121, 240, 203, 0.09);
+        outline: none;
+      }
+      .image-modal__frame {
+        display: grid;
+        gap: 0.7rem;
+      }
+      .image-modal__frame img {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        max-height: 80vh;
+        object-fit: contain;
+        border-radius: 18px;
+        background:
+          radial-gradient(120% 140% at 10% 0%, rgba(121, 240, 203, 0.1), transparent 42%),
+          rgba(5, 9, 18, 0.92);
+      }
+      .image-modal__caption {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.98rem;
+        line-height: 1.5;
+      }
+      body.modal-open {
+        overflow: hidden;
+      }
+      .timeline {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .timeline-card {
+        padding: 1rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .timeline-card .step {
+        display: inline-flex;
+        width: 2rem;
+        height: 2rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        margin-bottom: 0.8rem;
+        background: linear-gradient(135deg, rgba(121, 240, 203, 0.22), rgba(255, 189, 115, 0.22));
+        color: var(--text);
+        font-weight: 700;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .step-card {
+        padding: 1rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .step-card .nr {
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        font-size: 0.82rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .compare-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 1.3rem;
+        margin-top: 1rem;
+      }
+      .compare-card {
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .compare-card h3 {
+        margin-bottom: 0.6rem;
+      }
+      .quote {
+        margin-top: 1rem;
+        padding: 1rem 1.1rem;
+        border-left: 4px solid rgba(255, 189, 115, 0.8);
+        background: rgba(255, 189, 115, 0.08);
+        border-radius: 0 14px 14px 0;
+      }
+      .stack-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .uml-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .uml-card {
+        padding: 1rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .uml-card h3 {
+        margin-bottom: 0.7rem;
+      }
+      .uml-card svg {
+        width: 100%;
+        height: auto;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.22);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .uml-note {
+        margin-top: 0.65rem;
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+      .stack-card {
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
+        border: 1px solid rgba(255, 255, 255, 0.09);
+      }
+      .stack-card .layer {
+        display: inline-block;
+        margin-bottom: 0.65rem;
+        padding: 0.24rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(121, 240, 203, 0.12);
+        color: var(--accent);
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .diagram-wrap {
+        margin-top: 1rem;
+        padding: 0.9rem;
+        border-radius: 18px;
+        background: rgba(0, 0, 0, 0.22);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .diagram-wrap svg {
+        width: 100%;
+        height: auto;
+        max-height: 280px;
+      }
+      pre.flow {
+        margin: 1rem 0 0;
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.28);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: auto;
+        white-space: pre;
+        color: color-mix(in oklab, var(--text) 86%, var(--muted));
+        line-height: 1.5;
+        font-size: 0.95rem;
+      }
+      .time {
+        margin-top: 0.9rem;
+        color: var(--muted);
+        font-size: 0.96rem;
+      }
+      @media (max-width: 980px) {
+        .timeline,
+        .steps,
+        .stack-grid,
+        .uml-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 840px) {
+        .hero,
+        .grid2,
+        .compare-grid,
+        .timeline,
+        .steps,
+        .stack-grid,
+        .uml-grid {
+          grid-template-columns: 1fr;
+        }
+        .slide-figure,
+        .slide-figure--wide,
+        .slide-figure--panel,
+        .slide-figure--panel-landscape {
+          --figure-height: clamp(185px, 30vh, 260px);
+        }
+        .profile-visual {
+          min-height: 260px;
+        }
+        .profile-visual__person {
+          width: min(100%, 250px);
+          max-height: 235px;
+        }
+        .profile-visual__dog {
+          width: clamp(112px, 29vw, 160px);
+        }
+        .slide-figure__button::after {
+          top: auto;
+          right: 0.65rem;
+          bottom: 0.65rem;
+          font-size: 0.7rem;
+        }
+        .image-modal {
+          padding: 0.75rem;
+        }
+        .image-modal__dialog {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <span><strong>Föreläsning 1 av 2</strong> · ca 90 min (problem, modell, stack)</span>
+      <span><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd></span>
+      <span id="count">1 / …</span>
+      <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+    </header>
+
+    <main id="deck" aria-live="polite">
+      <section class="slide is-active" data-title="Start">
+        <p class="eyebrow">Lektion 1 · förberedande ramverk</p>
+        <div class="hero">
+          <div>
+            <h1>Från leadproblem till en lokal <span style="color: var(--accent)">AI + CRM-stack</span></h1>
+            <p>
+              Vi börjar inte i verktygen. Vi börjar i <strong>problemdomänen</strong>, i hur man
+              <strong>modellerar</strong> ett system och i varför en <strong>lokal, modulär och öppen</strong>
+              stack kan vara ett rimligt val för leadhantering.
+            </p>
+            <div class="pill-row">
+              <span class="pill">Problemdomän</span>
+              <span class="pill">Case</span>
+              <span class="pill">UML vs Miro</span>
+              <span class="pill">Agilt arbetssätt</span>
+              <span class="pill">Vendor lock-in</span>
+              <span class="pill">Öppen källkod</span>
+              <span class="pill">Docker</span>
+            </div>
+            <p class="callout">
+              Målet idag: ni ska kunna förklara <strong>varför</strong> stacken finns, <strong>vad</strong>
+              varje del ansvarar för och <strong>hur</strong> vi undviker att låsa oss för tidigt.
+            </p>
+          </div>
+          <figure class="slide-figure slide-figure--panel-landscape">
+            <img
+              src="./figures/slide_f1_hero_s01.webp"
+              alt="Hero-bild som visualiserar lokal AI- och CRM-stack"
+              loading="lazy"
+            />
+            <figcaption>En visuell ingång till hela berättelsen: problem, modellering, AI-lager och CRM i samma kedja.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Om mig">
+        <p class="eyebrow">Introduktion</p>
+        <h2>Vem håller i det här?</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Bakgrund</h3>
+            <ul>
+              <li><strong>Namn:</strong> <code>Oskar Neuman</code></li>
+              <li><strong>Roll idag:</strong> <code>CTO & Cofounder Bostello, Konsult RetroByMistake </code></li>
+              <li><strong>Arbetat med:</strong> integrationer, CRM, automation, backend, frontend, systemarkitektur</li>
+              <li><strong>Varför det här ämnet:</strong> jag har sett samma problem återkomma i riktiga projekt</li>
+            </ul>
+          </div>
+          <div class="profile-visual">
+            <img
+              class="profile-visual__person"
+              src="./figures/slide_f1_s02_me.webp"
+              alt="Porträtt av presentatören"
+              loading="lazy"
+            />
+            <img
+              class="profile-visual__dog"
+              src="./figures/slide_f1_s02_lovis_looking_left.png"
+              alt="Lovis som tittar in mot innehållet"
+              loading="lazy"
+            />
+          
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Mål och upplägg">
+        <p class="eyebrow">Kursplan &middot; progression</p>
+        <h2>Två lektioner, två olika frågor</h2>
+        <div class="compare-grid">
+          <div class="compare-card">
+            <h3>Lektion 1: Varför ser lösningen ut så här?</h3>
+            <ul>
+              <li>Förstå <strong>problemdomänen</strong> och vårt case.</li>
+              <li>Se hur <strong>modellering</strong> hjälper oss innan vi bygger.</li>
+              <li>Förstå varför vi pratar om <strong>öppen källkod</strong>, <strong>lokal drift</strong> och <strong>separation of concerns</strong>.</li>
+            </ul>
+          </div>
+          <div class="compare-card">
+            <h3>Lektion 2: Hur läser och felsöker vi flödet?</h3>
+            <ul>
+              <li>Statuskoder, webhookar, miljövariabler och n8n executions.</li>
+              <li>Hur Flowise, Twenty och Chatwoot beter sig i praktiken.</li>
+              <li>Hur vi bevisar <strong>var</strong> ett problem faktiskt sitter.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="callout">
+          Upplägget knyter direkt till kursplanen: <strong>API:er</strong>, <strong>webhooks</strong>,
+          <strong>integrationsplattformar</strong>, <strong>AI-modeller</strong> och <strong>dataflöden</strong>.
+        </p>
+        <figure class="slide-figure slide-figure--wide-tall">
+          <img
+            src="./figures/slide_f1_s03.webp"
+            alt="Illustration som stöd för kursens upplägg i två lektioner"
+            loading="lazy"
+          />
+          <figcaption>Bildstöd för progressionen: först förstå varför lösningen ser ut som den gör, sedan läsa och felsöka den i drift.</figcaption>
+        </figure>
+      </section>
+
+      <section class="slide" data-title="Problemdomänen">
+        <p class="eyebrow">Case &middot; varför vi gör det här</p>
+        <h2>Problemdomänen: leadhantering som faktiskt går att arbeta i</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Vårt case: Bosses Akvariefiskar</h3>
+            <p>
+              Bosse säljer akvariefiskar på ett sätt som väcker frågor. Wall Enberg vill skala upp
+              verksamheten och säger i princip: <strong>"Jag vill ha allt det där de stora har."</strong>
+            </p>
+            <ul>
+              <li>Leads kommer in via formulär och landar som svårlästa mejl.</li>
+              <li>Data är inkonsekvent, ofullständig och svår att följa upp.</li>
+              <li>Sälj, support och uppföljning saknar gemensam arbetsyta.</li>
+              <li>Produkterna i sig skapar flera olika flöden: bulkorder, upsell, support och PR.</li>
+            </ul>
+          </div>
+          <figure class="slide-figure slide-figure--panel-landscape">
+            <img
+              src="./figures/slide_f1_s04.webp"
+              alt="Illustration för caset Bosses Akvariefiskar"
+              loading="lazy"
+            />
+            <figcaption>Casebilden gör Bosses konkret innan ni börjar prata om data, flöden och systemgränser.</figcaption>
+          </figure>
+        </div>
+        <p class="callout">
+          Nyckelpoängen: <strong>vi bygger inte om hela hemsidan</strong>. Vi bygger ett system bakom
+          signalen, så att organisationen kan arbeta strukturerat med leads och frågor.
+        </p>
+        <p class="quote">
+          Exempel i caset: hotell som vill köpa <strong>Zombie Guppy Deluxe</strong>, kunder som undrar om
+          <strong>Återupplivning Plus</strong> kan läggas till i efterhand, och supportfrågor i stil med
+          <strong>"Varför rör sig inte min fisk trots premium?"</strong>
+        </p>
+      </section>
+
+      <section class="slide" data-title="Historik">
+        <p class="eyebrow">Dåtid till nutid</p>
+        <h2>Leadhanteringens resa: från inkorg till AI-steg i flödet</h2>
+        <div class="timeline">
+          <div class="timeline-card">
+            <span class="step">1</span>
+            <h3>Manuell eran</h3>
+            <p>Mejl, telefon, anteckningar och någon enstaka Excel-fil.</p>
+          </div>
+          <div class="timeline-card">
+            <span class="step">2</span>
+            <h3>CSV &amp; export</h3>
+            <p>Data flyttas manuellt mellan verktyg och blir lätt försenad eller fel.</p>
+          </div>
+          <div class="timeline-card">
+            <span class="step">3</span>
+            <h3>iPaaS &amp; automation</h3>
+            <p>Zapier och liknande gör trigger/action begripligt för fler än utvecklare.</p>
+          </div>
+          <div class="timeline-card">
+            <span class="step">4</span>
+            <h3>AI + API + CRM</h3>
+            <p>Samma flöden kan nu klassificera, svara, berika och skriva vidare till rätt system.</p>
+          </div>
+        </div>
+        <p class="callout">
+          Viktigt: många organisationer lever i flera generationer samtidigt. Det är normalt att
+          ett modernt AI-flöde fortfarande måste prata med gamla arbetssätt.
+        </p>
+        <p class="quote">
+          För Bosse betyder det: från ett obegripligt mejl om "12 döda fiskar till hotellobbyn" till ett
+          strukturerat lead med kategori, produktförslag och nästa ägare i organisationen.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Projektstart">
+        <p class="eyebrow">Vad gör vi först?</p>
+        <h2>När man påbörjar ett projekt: börja i affären, inte i ramverket</h2>
+        <div class="steps">
+          <div class="step-card">
+            <span class="nr">Steg 1</span>
+            <h3>Förstå målet</h3>
+            <p>Vad menar kunden med "vi vill ha allt det de stora har"?</p>
+          </div>
+          <div class="step-card">
+            <span class="nr">Steg 2</span>
+            <h3>Synliggör problemen</h3>
+            <p>Vad fungerar dåligt idag? Var tappar vi data, tid och överblick?</p>
+          </div>
+          <div class="step-card">
+            <span class="nr">Steg 3</span>
+            <h3>Sätt systemgränsen</h3>
+            <p>Vad ingår i vårt uppdrag och vad ingår inte?</p>
+          </div>
+          <div class="step-card">
+            <span class="nr">Steg 4</span>
+            <h3>Definiera framgång</h3>
+            <p>Hur vet vi att lösningen faktiskt hjälper sälj, support och verksamheten?</p>
+          </div>
+        </div>
+        <figure class="slide-figure slide-figure--wide-tall">
+          <img
+            src="./figures/slide_f1_s06.webp"
+            alt="Illustration för projektstart och avgränsning"
+            loading="lazy"
+          />
+          <figcaption>Projektstarten blir tydligare när mål, problem, systemgräns och framgångskriterier syns samtidigt.</figcaption>
+        </figure>
+        <p class="quote">
+          I vårt case betyder det: <strong>vi avgränsar bort WordPress-ombyggnad</strong> och fokuserar på
+          strukturerad lead- och ärendehantering bakom formuläret.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Modellera först">
+        <p class="eyebrow">Validering före implementation</p>
+        <h2>Varför det är viktigt att modellera och stämma av</h2>
+        <div class="compare-grid">
+          <div class="compare-card">
+            <h3>Miro eller annan brainstormyta</h3>
+            <ul>
+              <li>Bra för att fånga idéer, problem och domäner snabbt.</li>
+              <li>Hjälper oss att se <strong>bredden</strong> i problemet.</li>
+              <li>Risk: allt blandas i samma bild och gränserna blir otydliga.</li>
+            </ul>
+          </div>
+          <div class="compare-card">
+            <h3>UML eller annan tydlig modell</h3>
+            <ul>
+              <li>Bra för att beskriva <strong>en fråga i taget</strong>.</li>
+              <li>Gör det lättare att se ordning, ansvar, aktörer och systemgränser.</li>
+              <li>Hjälper både utvecklare och beställare att bekräfta samma bild.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="callout warn">
+          AI gör det snabbt att producera kod. Det gör det <strong>inte</strong> snabbt att rätta felaktig
+          arkitektur i efterhand. Om modellen blir fel från början kan AI bara skala upp misstaget.
+        </p>
+      </section>
+
+      <section class="slide" data-title="UML-verktyg">
+        <p class="eyebrow">Verktyg för precision</p>
+        <h2>Tre UML-liknande bilder för Bosses Akvariefiskar</h2>
+        <div class="uml-grid">
+          <div class="uml-card">
+            <h3>Actor / use case</h3>
+            <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Use case med kund, salj och support">
+              <rect x="92" y="18" width="150" height="180" rx="18" fill="#13203b" stroke="rgba(255,255,255,0.18)" />
+              <ellipse cx="167" cy="58" rx="56" ry="18" fill="rgba(121,240,203,0.08)" stroke="rgba(121,240,203,0.42)" />
+              <ellipse cx="167" cy="98" rx="60" ry="18" fill="rgba(255,189,115,0.08)" stroke="rgba(255,189,115,0.42)" />
+              <ellipse cx="167" cy="138" rx="58" ry="18" fill="rgba(138,184,255,0.08)" stroke="rgba(138,184,255,0.42)" />
+              <ellipse cx="167" cy="176" rx="52" ry="16" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.26)" />
+              <text x="167" y="63" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Beställa död fisk</text>
+              <text x="167" y="103" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Köpa tillägg</text>
+              <text x="167" y="143" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Ställa supportfråga</text>
+              <text x="167" y="180" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Följa upp lead</text>
+              <circle cx="42" cy="54" r="12" fill="none" stroke="#edf2ff" />
+              <line x1="42" y1="66" x2="42" y2="100" stroke="#edf2ff" />
+              <line x1="28" y1="78" x2="56" y2="78" stroke="#edf2ff" />
+              <line x1="42" y1="100" x2="29" y2="120" stroke="#edf2ff" />
+              <line x1="42" y1="100" x2="55" y2="120" stroke="#edf2ff" />
+              <text x="42" y="138" text-anchor="middle" fill="#a7b5d7" font-size="11" font-family="Source Sans 3, sans-serif">Kund</text>
+              <circle cx="281" cy="70" r="12" fill="none" stroke="#edf2ff" />
+              <line x1="281" y1="82" x2="281" y2="114" stroke="#edf2ff" />
+              <line x1="267" y1="94" x2="295" y2="94" stroke="#edf2ff" />
+              <line x1="281" y1="114" x2="269" y2="132" stroke="#edf2ff" />
+              <line x1="281" y1="114" x2="293" y2="132" stroke="#edf2ff" />
+              <text x="281" y="150" text-anchor="middle" fill="#a7b5d7" font-size="11" font-family="Source Sans 3, sans-serif">Sälj /</text>
+              <text x="281" y="164" text-anchor="middle" fill="#a7b5d7" font-size="11" font-family="Source Sans 3, sans-serif">Support</text>
+              <line x1="56" y1="58" x2="111" y2="58" stroke="#8ab8ff" stroke-dasharray="4 4" />
+              <line x1="56" y1="96" x2="107" y2="138" stroke="#8ab8ff" stroke-dasharray="4 4" />
+              <line x1="242" y1="98" x2="267" y2="94" stroke="#ffbd73" stroke-dasharray="4 4" />
+              <line x1="219" y1="176" x2="267" y2="130" stroke="#ffbd73" stroke-dasharray="4 4" />
+            </svg>
+            <p class="uml-note">Här syns vilka aktörer vi bryr oss om och vilka beteenden systemet måste stödja.</p>
+          </div>
+          <div class="uml-card">
+            <h3>Sekvensdiagram</h3>
+            <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sekvensdiagram för Bosses lead">
+              <text x="28" y="22" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Kund</text>
+              <text x="92" y="22" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">React</text>
+              <text x="152" y="22" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">n8n</text>
+              <text x="208" y="22" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Flowise</text>
+              <text x="266" y="22" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Twenty</text>
+              <line x1="32" y1="30" x2="32" y2="202" stroke="rgba(255,255,255,0.22)" stroke-dasharray="4 4" />
+              <line x1="100" y1="30" x2="100" y2="202" stroke="rgba(255,255,255,0.22)" stroke-dasharray="4 4" />
+              <line x1="160" y1="30" x2="160" y2="202" stroke="rgba(255,255,255,0.22)" stroke-dasharray="4 4" />
+              <line x1="224" y1="30" x2="224" y2="202" stroke="rgba(255,255,255,0.22)" stroke-dasharray="4 4" />
+              <line x1="284" y1="30" x2="284" y2="202" stroke="rgba(255,255,255,0.22)" stroke-dasharray="4 4" />
+              <path d="M36 58 H94" stroke="#79f0cb" stroke-width="3" />
+              <polygon points="100,58 91,53 91,63" fill="#79f0cb" />
+              <text x="66" y="51" text-anchor="middle" fill="#a7b5d7" font-size="10" font-family="Source Sans 3, sans-serif">Skicka formular</text>
+              <path d="M104 88 H154" stroke="#79f0cb" stroke-width="3" />
+              <polygon points="160,88 151,83 151,93" fill="#79f0cb" />
+              <text x="129" y="81" text-anchor="middle" fill="#a7b5d7" font-size="10" font-family="Source Sans 3, sans-serif">POST /lead</text>
+              <path d="M166 118 H218" stroke="#ffbd73" stroke-width="3" />
+              <polygon points="224,118 215,113 215,123" fill="#ffbd73" />
+              <text x="192" y="111" text-anchor="middle" fill="#a7b5d7" font-size="10" font-family="Source Sans 3, sans-serif">klassificera</text>
+              <path d="M220 146 H166" stroke="#8ab8ff" stroke-width="3" />
+              <polygon points="160,146 169,141 169,151" fill="#8ab8ff" />
+              <text x="193" y="139" text-anchor="middle" fill="#a7b5d7" font-size="10" font-family="Source Sans 3, sans-serif">JSON-kategori</text>
+              <path d="M166 176 H278" stroke="#79f0cb" stroke-width="3" />
+              <polygon points="284,176 275,171 275,181" fill="#79f0cb" />
+              <text x="222" y="169" text-anchor="middle" fill="#a7b5d7" font-size="10" font-family="Source Sans 3, sans-serif">skapa kontakt + affar</text>
+            </svg>
+            <p class="uml-note">Sekvensen visar i vilken ordning Bosses lead rör sig från kund till CRM.</p>
+          </div>
+          <div class="uml-card">
+            <h3>Processdiagram</h3>
+            <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Processdiagram för Bosses lead och support">
+              <rect x="18" y="24" width="64" height="34" rx="17" fill="#13203b" stroke="rgba(255,255,255,0.18)" />
+              <text x="50" y="45" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Signal in</text>
+              <rect x="110" y="24" width="86" height="34" rx="10" fill="#13203b" stroke="rgba(121,240,203,0.36)" />
+              <text x="153" y="45" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Normalisera</text>
+              <rect x="224" y="24" width="78" height="34" rx="10" fill="#13203b" stroke="rgba(255,189,115,0.36)" />
+              <text x="263" y="45" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">AI-klassning</text>
+              <polygon points="154,94 196,122 154,150 112,122" fill="#13203b" stroke="rgba(138,184,255,0.42)" />
+              <text x="154" y="118" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Lead</text>
+              <text x="154" y="132" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">eller support?</text>
+              <rect x="20" y="176" width="92" height="28" rx="10" fill="#13203b" stroke="rgba(121,240,203,0.36)" />
+              <text x="66" y="194" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Spara i CRM</text>
+              <rect x="206" y="176" width="96" height="28" rx="10" fill="#13203b" stroke="rgba(255,189,115,0.36)" />
+              <text x="254" y="194" text-anchor="middle" fill="#edf2ff" font-size="11" font-family="Source Sans 3, sans-serif">Svara / eskalera</text>
+              <path d="M82 41 H104" stroke="#79f0cb" stroke-width="3" />
+              <polygon points="110,41 101,36 101,46" fill="#79f0cb" />
+              <path d="M196 41 H218" stroke="#ffbd73" stroke-width="3" />
+              <polygon points="224,41 215,36 215,46" fill="#ffbd73" />
+              <path d="M262 58 C262 78, 210 88, 176 104" stroke="#8ab8ff" stroke-width="3" fill="none" />
+              <polygon points="170,107 180,98 181,109" fill="#8ab8ff" />
+              <path d="M124 145 C104 157, 90 168, 78 176" stroke="#79f0cb" stroke-width="3" fill="none" />
+              <polygon points="72,180 81,170 83,181" fill="#79f0cb" />
+              <path d="M184 145 C205 157, 221 168, 238 176" stroke="#ffbd73" stroke-width="3" fill="none" />
+              <polygon points="244,180 233,179 239,169" fill="#ffbd73" />
+            </svg>
+            <p class="uml-note">Processbilden hjälper eleverna att se var regex, AI, CRM och support faktiskt möts.</p>
+          </div>
+        </div>
+        <p class="callout">
+          Poängen med de här bilderna är inte perfekt notation. Poängen är att alla i rummet ska förstå
+          <strong>vad</strong> vi bygger, <strong>i vilken ordning</strong> och <strong>för vem</strong>.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Vattenfall vs agil">
+        <p class="eyebrow">Arbetssätt</p>
+        <h2>Vattenfall och agilt arbetssätt löser olika problem</h2>
+        <div class="compare-grid">
+          <div class="compare-card">
+            <h3>Vattenfall</h3>
+            <ul>
+              <li>Krav specas tungt i början.</li>
+              <li>Passar när förändring är dyr eller oönskad.</li>
+              <li>Risk: lösningen låses innan verkliga behov är testade.</li>
+            </ul>
+          </div>
+          <div class="compare-card">
+            <h3>Agilt / iterativt</h3>
+            <ul>
+              <li>Bygg små steg, visa tidigt, ändra snabbt.</li>
+              <li>Passar när krav och behov klarnar under resan.</li>
+              <li>Gör det lättare att skala och anpassa utan total omstart.</li>
+            </ul>
+          </div>
+        </div>
+        <figure class="slide-figure slide-figure--wide">
+          <img
+            src="./figures/slide_f1_s09.webp"
+            alt="Illustration som jämför vattenfall och agilt arbetssätt"
+            loading="lazy"
+          />
+          <figcaption>Här kan du peka på skillnaden mellan att låsa krav tidigt och att iterera när verkligheten förändras.</figcaption>
+        </figure>
+        <p class="callout">
+          Många offentliga projekt blir dyra inte för att problemen är unika, utan för att
+          <strong>kravspecen fryser lösningen för tidigt</strong>. Då byggs systemet för upphandlingen,
+          inte för användningen.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Skalbarhet och lock-in">
+        <p class="eyebrow">Skalbarhet &middot; adaption</p>
+        <h2>Vendor lock-in är ett affärsproblem, inte bara ett teknikord</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Vad vi vill möjliggöra</h3>
+            <ul>
+              <li>Byta kanal utan att kasta hela lösningen.</li>
+              <li>Skala upp utan att kostnaden exploderar i licenser.</li>
+              <li>Låta olika team arbeta i samma kedja med tydliga ansvar.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Vad vendor lock-in betyder här</h3>
+            <ul>
+              <li>Flödet byggs runt en enda leverantörs panel eller logik.</li>
+              <li>När marknadsföringskanalen ändras måste ni börja om.</li>
+              <li>Exempel: ni bygger allt kring Meta, men nästa år är "Flip-Flop" billigare och bättre.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="quote">
+          Vi vill alltså bygga en motor som är <strong>agnostisk mot inflödet</strong>: formulär, chat,
+          kampanj eller framtida kanal ska kunna kopplas in utan att hela modellen spricker.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Öppen källkod">
+        <p class="eyebrow">Teknikval</p>
+        <h2>Öppen källkod och självhostat vs iPaaS</h2>
+        <p>
+          <strong>Öppen källkod</strong> betyder att koden är öppen att granska, köra och bygga vidare på.
+          Det ger ofta större frihet, större anpassningsbarhet och mindre beroende av att en leverantör
+          råkar vilja stödja just din kanal.
+        </p>
+        <div class="compare-grid">
+          <div class="compare-card">
+            <h3>Självhostad open source</h3>
+            <ul>
+              <li>Mer kontroll över data, drift och anpassning.</li>
+              <li>Lägre risk för licenslåsning.</li>
+              <li>Ni tar också ansvar för drift, säkerhet och uppgraderingar.</li>
+            </ul>
+          </div>
+          <div class="compare-card">
+            <h3>iPaaS / leverantörsplattform</h3>
+            <ul>
+              <li>Snabbt att komma igång och lätt att förstå.</li>
+              <li>Mindre driftansvar på kort sikt.</li>
+              <li>Kan bli dyrt eller begränsande när volym, behov eller kanal förändras.</li>
+            </ul>
+          </div>
+        </div>
+        <figure class="slide-figure slide-figure--wide">
+          <img
+            src="./figures/slide_f1_s11.webp"
+            alt="Illustration för öppen källkod och självhostat kontra iPaaS"
+            loading="lazy"
+          />
+          <figcaption>Använd bilden för att prata om skillnaden mellan snabbare start, kontroll över data och ansvar för drift.</figcaption>
+        </figure>
+        <p class="callout">
+          Det här är inte en religion. Det är en <strong>balans mellan fart, kontroll och ansvar</strong>.
+          I kursen väljer vi en lokal stack för att göra ansvar och gränser synliga.
+        </p>
+        <p class="quote">
+          Minnesregel: <strong>Zapier skalar kostnad med framgång.</strong>
+          <strong>Self-host skalar komplexitet med framgång.</strong>
+        </p>
+      </section>
+
+      <section class="slide" data-title="Docker">
+        <p class="eyebrow">Lokal driftmodell</p>
+        <h2>Vad Docker är, och varför containrar passar i undervisningen</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Containermiljö i praktiken</h3>
+            <ul>
+              <li>Varje tjänst körs i sin egen container.</li>
+              <li><code>docker compose up</code> startar hela miljön tillsammans.</li>
+              <li>Tjänsterna delar nätverk men har olika ansvar.</li>
+              <li>Det gör miljön repeterbar mellan datorer och tillfällen.</li>
+            </ul>
+            <pre class="flow">Browser / formulär
+  -> localhost
+  -> n8n / Flowise / Twenty / Chatwoot
+  -> samma Docker-nätverk</pre>
+          </div>
+          <figure class="slide-figure slide-figure--panel">
+            <img
+              src="./figures/slide_f1_s12.webp"
+              alt="Illustration av Docker och containermiljö"
+              loading="lazy"
+            />
+            <figcaption>En konkret bild som hjälper dig att knyta containrar, nätverk och den lokala labbmiljön till varandra.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Vår stack">
+        <p class="eyebrow">Separation of concerns</p>
+        <h2>Vår lösning: vilket lager äger vilken fråga?</h2>
+        <div class="stack-grid">
+          <div class="stack-card">
+            <span class="layer">Insamling</span>
+            <h3>React / formulär</h3>
+            <p>Samlar in signalen från användaren och skickar den vidare in i kedjan.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">Orkestrering</span>
+            <h3>n8n</h3>
+            <p>Tar emot webhookar, styr villkor och kopplar ihop resten av systemen.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">AI-berikning</span>
+            <h3>Flowise</h3>
+            <p>Kapslar AI-logik och prompts så att n8n inte behöver bära allt själv.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">Affärsdata</span>
+            <h3>Twenty</h3>
+            <p>CRM-lagret där kontakt, affär och uppföljning kan fortsätta.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">Supportyta</span>
+            <h3>Chatwoot</h3>
+            <p>Konversationsdelen för ärenden, chat och kundserviceflöden.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">Driftlager</span>
+            <h3>Docker Compose</h3>
+            <p>Binder ihop allt och gör miljön körbar om och om igen.</p>
+          </div>
+        </div>
+        <figure class="slide-figure slide-figure--wide">
+          <img
+            src="./figures/slide_f1_s13.webp"
+            alt="Illustration av tjänstelagren i den lokala stacken"
+            loading="lazy"
+          />
+          <figcaption>Stackbilden fungerar som repetition: varje tjänst får ett tydligt ansvar i samma sammanhängande flöde.</figcaption>
+        </figure>
+        <p class="callout">
+          Grundprincipen är enkel: <strong>ett verktyg ska inte behöva vara allt samtidigt</strong>.
+          Ju tydligare ansvar per lager, desto lättare att förstå, byta ut och felsöka.
+        </p>
+        <p class="quote">
+          Exempel: React samlar in frågan "Kan vi köpa 24 Zombie Guppy Deluxe?", Flowise klassar om det
+          är bulk_order eller press_or_partnership, Twenty får affärsspåret, och Chatwoot tar
+          "Varför rör sig inte min fisk?"-samtalen.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Arkitektur">
+        <p class="eyebrow">Från signal till handling</p>
+        <h2>Så hänger huvudflödet ihop i vår laborativa modell</h2>
+        <div class="diagram-wrap" role="img" aria-label="Huvudflöde från formulär via n8n till AI, CRM och supportyta">
+          <svg viewBox="0 0 980 280" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="archLine" x1="0" x2="1">
+                <stop offset="0" stop-color="#79f0cb" />
+                <stop offset="1" stop-color="#ffbd73" />
+              </linearGradient>
+            </defs>
+            <rect x="30" y="108" width="170" height="70" rx="16" fill="#13203b" stroke="rgba(255,255,255,0.18)" />
+            <text x="115" y="136" text-anchor="middle" fill="#edf2ff" font-size="17" font-family="Source Sans 3, sans-serif">Signal in</text>
+            <text x="115" y="158" text-anchor="middle" fill="#a7b5d7" font-size="12" font-family="Source Sans 3, sans-serif">formulär / kampanj / chatt</text>
+
+            <rect x="258" y="108" width="182" height="70" rx="16" fill="#13203b" stroke="rgba(121,240,203,0.34)" />
+            <text x="349" y="136" text-anchor="middle" fill="#edf2ff" font-size="17" font-family="Source Sans 3, sans-serif">n8n</text>
+            <text x="349" y="158" text-anchor="middle" fill="#a7b5d7" font-size="12" font-family="Source Sans 3, sans-serif">webhook + logik + routing</text>
+
+            <rect x="498" y="42" width="186" height="62" rx="16" fill="#13203b" stroke="rgba(121,240,203,0.42)" />
+            <text x="591" y="78" text-anchor="middle" fill="#edf2ff" font-size="16" font-family="Source Sans 3, sans-serif">Flowise</text>
+
+            <rect x="498" y="120" width="186" height="62" rx="16" fill="#13203b" stroke="rgba(255,189,115,0.42)" />
+            <text x="591" y="156" text-anchor="middle" fill="#edf2ff" font-size="16" font-family="Source Sans 3, sans-serif">Twenty</text>
+
+            <rect x="498" y="198" width="186" height="62" rx="16" fill="#13203b" stroke="rgba(138,184,255,0.42)" />
+            <text x="591" y="234" text-anchor="middle" fill="#edf2ff" font-size="16" font-family="Source Sans 3, sans-serif">Chatwoot</text>
+
+            <rect x="762" y="108" width="188" height="70" rx="16" fill="#13203b" stroke="rgba(255,255,255,0.18)" />
+            <text x="856" y="136" text-anchor="middle" fill="#edf2ff" font-size="17" font-family="Source Sans 3, sans-serif">Organisationen</text>
+            <text x="856" y="158" text-anchor="middle" fill="#a7b5d7" font-size="12" font-family="Source Sans 3, sans-serif">sälj / support / uppföljning</text>
+
+            <path d="M208 143 H248" stroke="url(#archLine)" stroke-width="4" fill="none" />
+            <polygon points="256,143 243,136 243,150" fill="#ffbd73" />
+
+            <path d="M446 139 C468 139, 474 86, 490 74" stroke="url(#archLine)" stroke-width="4" fill="none" />
+            <polygon points="496,70 484,67 488,80" fill="#79f0cb" />
+
+            <path d="M446 143 H490" stroke="url(#archLine)" stroke-width="4" fill="none" />
+            <polygon points="498,143 486,136 486,150" fill="#ffbd73" />
+
+            <path d="M446 147 C468 147, 474 214, 490 226" stroke="url(#archLine)" stroke-width="4" fill="none" />
+            <polygon points="496,230 488,219 484,233" fill="#8ab8ff" />
+
+            <path d="M690 73 C732 76, 744 112, 756 130" stroke="url(#archLine)" stroke-width="4" fill="none" />
+            <polygon points="760,136 750,123 746,137" fill="#79f0cb" />
+
+            <path d="M690 151 H752" stroke="url(#archLine)" stroke-width="4" fill="none" />
+            <polygon points="760,151 748,144 748,158" fill="#ffbd73" />
+
+            <path d="M690 229 C732 226, 744 190, 756 156" stroke="url(#archLine)" stroke-width="4" fill="none" />
+            <polygon points="760,150 748,149 753,161" fill="#8ab8ff" />
+          </svg>
+        </div>
+        <ul>
+          <li>I lektion 1 tittar vi på <strong>varför</strong> Bosses flöde ser ut så här.</li>
+          <li>I lektion 2 går vi in i <strong>hur</strong> vi läser fel, payloads, statuskoder och executions i samma Bosses-case.</li>
+          <li>Demo idag: skicka in en signal om död fisk, följ kedjan, och se varför separationen mellan tjänsterna spelar roll.</li>
+        </ul>
+        <p class="callout">Om lektion 1 svarar på <strong>varför</strong>, svarar lektion 2 på <strong>var det gick fel</strong>.</p>
+      </section>
+    </main>
+
+    <div class="image-modal" id="imageModal" aria-hidden="true">
+      <div class="image-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="imageModalCaption">
+        <div class="image-modal__top">
+          <button type="button" class="image-modal__close" id="imageModalClose" aria-label="Stäng förstorad bild">
+            Stäng
+          </button>
+        </div>
+        <div class="image-modal__frame">
+          <img id="imageModalImg" alt="" />
+          <p class="image-modal__caption" id="imageModalCaption"></p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const slides = Array.from(document.querySelectorAll(".slide"));
+        const countEl = document.getElementById("count");
+        const prog = document.getElementById("prog");
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("imageModalImg");
+        const modalCaption = document.getElementById("imageModalCaption");
+        const modalClose = document.getElementById("imageModalClose");
+        const figures = Array.from(document.querySelectorAll(".slide-figure"));
+        let idx = 0;
+        let lastModalTrigger = null;
+
+        figures.forEach((figure) => {
+          const img = figure.querySelector("img");
+          if (!img) return;
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "slide-figure__button";
+          button.setAttribute("aria-label", "Öppna bilden större: " + (img.alt || "slidebild"));
+
+          figure.insertBefore(button, img);
+          button.appendChild(img);
+
+          button.addEventListener("click", () => {
+            lastModalTrigger = button;
+            modalImg.src = img.currentSrc || img.src;
+            modalImg.alt = img.alt || "";
+            const caption = figure.querySelector("figcaption");
+            modalCaption.textContent = caption ? caption.textContent.trim() : img.alt || "";
+            modal.classList.add("is-open");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-open");
+            modalClose.focus();
+          });
+        });
+
+        function closeModal() {
+          if (!modal.classList.contains("is-open")) return;
+          modal.classList.remove("is-open");
+          modal.setAttribute("aria-hidden", "true");
+          document.body.classList.remove("modal-open");
+          modalImg.removeAttribute("src");
+          modalImg.alt = "";
+          if (lastModalTrigger) {
+            lastModalTrigger.focus();
+          }
+        }
+
+        modalClose.addEventListener("click", closeModal);
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+
+        function render() {
+          slides.forEach((s, i) => s.classList.toggle("is-active", i === idx));
+          countEl.textContent = idx + 1 + " / " + slides.length;
+          prog.style.width = ((idx + 1) / slides.length) * 100 + "%";
+          const title = slides[idx].dataset.title || "";
+          document.title = title ? title + " — Föreläsning 1" : "Föreläsning 1";
+        }
+
+        function go(delta) {
+          idx = Math.max(0, Math.min(slides.length - 1, idx + delta));
+          render();
+        }
+
+        document.addEventListener("keydown", (e) => {
+          const active = document.activeElement;
+          if (
+            active &&
+            active.classList &&
+            active.classList.contains("slide-figure__button") &&
+            (e.key === " " || e.key === "Enter")
+          ) {
+            return;
+          }
+          if (modal.classList.contains("is-open")) {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              closeModal();
+            }
+            return;
+          }
+          if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+            e.preventDefault();
+            go(1);
+          }
+          if (e.key === "ArrowLeft" || e.key === "PageUp") {
+            e.preventDefault();
+            go(-1);
+          }
+          if (e.key === "Home") {
+            e.preventDefault();
+            idx = 0;
+            render();
+          }
+          if (e.key === "End") {
+            e.preventDefault();
+            idx = slides.length - 1;
+            render();
+          }
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

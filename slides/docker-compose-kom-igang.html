@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Docker Compose-guide — Kom igång lokalt på macOS och Windows</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,480;1,9..144,480&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg0: #08111e;
+        --bg1: #101b31;
+        --card: rgba(16, 24, 45, 0.92);
+        --card-2: rgba(12, 18, 34, 0.9);
+        --text: #edf2ff;
+        --muted: #a7b5d7;
+        --accent: #79f0cb;
+        --accent2: #ffbd73;
+        --accent3: #8ab8ff;
+        --warn: #ffd47f;
+        font-family: "Source Sans 3", system-ui, sans-serif;
+        color: var(--text);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(1100px 640px at 8% 2%, rgba(46, 83, 149, 0.48), transparent 52%),
+          radial-gradient(900px 540px at 92% 10%, rgba(14, 104, 102, 0.28), transparent 48%),
+          linear-gradient(180deg, var(--bg0), var(--bg1));
+      }
+      header.bar {
+        position: fixed;
+        inset: 0 0 auto 0;
+        padding: 0.7rem 1.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background: rgba(6, 10, 18, 0.76);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 5;
+        font-size: 0.92rem;
+      }
+      .bar kbd {
+        font: inherit;
+        padding: 0.12rem 0.45rem;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .progress {
+        flex: 1;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .progress > i {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+      }
+      main {
+        padding: 4.3rem 1.25rem 2.5rem;
+        max-width: 1150px;
+        margin: 0 auto;
+      }
+      .slide {
+        display: none;
+        padding: 2.2rem 2.15rem 2.4rem;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(18, 28, 52, 0.96), rgba(12, 18, 34, 0.96));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 34px 100px rgba(0, 0, 0, 0.42);
+        min-height: min(74vh, 760px);
+      }
+      .slide.is-active {
+        display: block;
+        animation: in 360ms ease-out;
+      }
+      @keyframes in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .eyebrow {
+        margin: 0 0 0.8rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: "Fraunces", Georgia, serif;
+        line-height: 1.12;
+        margin: 0 0 1rem;
+      }
+      h1 {
+        font-size: clamp(2rem, 3.6vw, 3rem);
+      }
+      h2 {
+        font-size: clamp(1.45rem, 2.8vw, 2.15rem);
+      }
+      h3 {
+        font-size: 1.05rem;
+      }
+      p,
+      li {
+        font-size: 1.08rem;
+        line-height: 1.5;
+        color: color-mix(in oklab, var(--text) 87%, var(--muted));
+      }
+      ul {
+        margin: 0.45rem 0 0;
+        padding-left: 1.2rem;
+      }
+      li {
+        margin: 0.38rem 0;
+      }
+      strong {
+        color: var(--text);
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.95em;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.28fr) minmax(290px, 0.92fr);
+        gap: 1.5rem;
+        align-items: stretch;
+      }
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-top: 1rem;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.38rem 0.72rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+      .callout {
+        margin-top: 1.15rem;
+        padding: 1rem 1.1rem;
+        border-radius: 16px;
+        border: 1px dashed rgba(121, 240, 203, 0.36);
+        background: rgba(121, 240, 203, 0.08);
+        color: color-mix(in oklab, var(--text) 88%, var(--accent));
+      }
+      .callout.warn {
+        border-color: rgba(255, 212, 127, 0.36);
+        background: rgba(255, 212, 127, 0.08);
+        color: color-mix(in oklab, var(--text) 88%, var(--warn));
+      }
+      .quote {
+        margin-top: 1rem;
+        padding: 1rem 1.1rem;
+        border-left: 4px solid rgba(255, 189, 115, 0.8);
+        background: rgba(255, 189, 115, 0.08);
+        border-radius: 0 14px 14px 0;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 1.3rem;
+        margin-top: 1rem;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .box {
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .box h3,
+      .box p {
+        margin-top: 0;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .step-card {
+        padding: 1rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .step-card .nr {
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        font-size: 0.82rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .compare-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 1.3rem;
+        margin-top: 1rem;
+      }
+      .compare-card {
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .stack-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .stack-card {
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
+        border: 1px solid rgba(255, 255, 255, 0.09);
+      }
+      .stack-card .layer {
+        display: inline-block;
+        margin-bottom: 0.65rem;
+        padding: 0.24rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(121, 240, 203, 0.12);
+        color: var(--accent);
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .service-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        font-size: 0.95rem;
+      }
+      .service-table th,
+      .service-table td {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 0.62rem 0.72rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      .service-table th {
+        background: rgba(0, 0, 0, 0.24);
+        color: color-mix(in oklab, var(--text) 92%, var(--muted));
+      }
+      .service-table td code {
+        white-space: nowrap;
+      }
+      .badge {
+        display: inline-block;
+        margin-bottom: 0.7rem;
+        padding: 0.24rem 0.56rem;
+        border-radius: 999px;
+        background: rgba(138, 184, 255, 0.12);
+        color: var(--accent3);
+        font-size: 0.8rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .diagram-wrap {
+        margin-top: 1rem;
+        padding: 0.9rem;
+        border-radius: 18px;
+        background: rgba(0, 0, 0, 0.22);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .diagram-wrap svg {
+        width: 100%;
+        height: auto;
+      }
+      pre.flow {
+        margin: 1rem 0 0;
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.28);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: color-mix(in oklab, var(--text) 86%, var(--muted));
+        line-height: 1.5;
+        font-size: 0.95rem;
+      }
+      .checklist {
+        margin-top: 1rem;
+        padding: 0;
+        list-style: none;
+      }
+      .checklist li {
+        padding: 0.7rem 0.85rem;
+        margin: 0.55rem 0;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .time {
+        margin-top: 0.9rem;
+        color: var(--muted);
+        font-size: 0.96rem;
+      }
+      @media (max-width: 980px) {
+        .steps,
+        .stack-grid,
+        .grid3 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 840px) {
+        .hero,
+        .grid2,
+        .compare-grid,
+        .steps,
+        .stack-grid,
+        .grid3 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <span><strong>Miljöguide</strong> · ca 35-45 min (setup, portar, secrets, deploy)</span>
+      <span><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd></span>
+      <span id="count">1 / …</span>
+      <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+    </header>
+
+    <main id="deck" aria-live="polite">
+      <section class="slide is-active" data-title="Start">
+        <p class="eyebrow">Miljöguide · lokal drift</p>
+        <div class="hero">
+          <div>
+            <h1>Kom igång med <span style="color: var(--accent)">Docker Compose</span> för vår AI + CRM-stack</h1>
+            <p>
+              Den här guiden förklarar <strong>vad som behöver finnas lokalt</strong>, hur ni startar
+              vår Compose-miljö på <strong>macOS</strong> och <strong>Windows</strong>, vilka tjänster som
+              faktiskt går igång, hur <strong>portar</strong> fungerar och varför Docker gör samma stack
+              enklare att förstå både lokalt och vid deploy.
+            </p>
+            <div class="pill-row">
+              <span class="pill">macOS</span>
+              <span class="pill">Windows</span>
+              <span class="pill">Docker Desktop</span>
+              <span class="pill">Portar</span>
+              <span class="pill">Tjänstenamn</span>
+              <span class="pill">Secrets</span>
+              <span class="pill">Deploy-tänk</span>
+            </div>
+            <p class="callout">
+              Målet: efter den här genomgången ska ni kunna säga <strong>vad som startar</strong>,
+              <strong>var ni öppnar det</strong>, <strong>hur containrarna pratar</strong> och
+              <strong>vilka variabler</strong> som måste finnas för att hela flödet ska bli användbart.
+            </p>
+          </div>
+          <div class="box">
+            <span class="badge">Det ni får med er</span>
+            <ul>
+              <li>En fungerande startsekvens med <code>docker compose</code>.</li>
+              <li>En mental modell för <code>localhost</code> kontra interna tjänstenamn.</li>
+              <li>En överblick över hela stacken: React, n8n, Flowise, Chatwoot, Twenty och stödcontainers.</li>
+              <li>En enkel modell för hur <strong>env vars</strong> och <strong>secrets</strong> hör ihop.</li>
+            </ul>
+            <pre class="flow">Laptop -> Docker Compose
+  -> portar pa hosten
+  -> containrar pa samma natverk
+  -> samma kontrakt lokalt och vid deploy</pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Varför Compose">
+        <p class="eyebrow">Varför vi gör så här</p>
+        <h2>Docker Compose löser ett undervisningsproblem innan det löser ett driftproblem</h2>
+        <div class="compare-grid">
+          <div class="compare-card">
+            <h3>Utan en gemensam miljö</h3>
+            <ul>
+              <li>Varje elev installerar saker på olika sätt.</li>
+              <li>Olika versioner av Postgres, Redis eller Node ger olika fel.</li>
+              <li>Det blir svårt att avgöra om felet sitter i <strong>kod</strong> eller i <strong>maskinen</strong>.</li>
+            </ul>
+          </div>
+          <div class="compare-card">
+            <h3>Med Docker Compose</h3>
+            <ul>
+              <li>Samma tjänster och samma portar startar för alla.</li>
+              <li>Vi kan prata om en och samma arkitektur i klassrummet.</li>
+              <li>Ni får en repeterbar miljö där flödet går att starta, stoppa, läsa och felsöka.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="callout">
+          I kursen är Compose alltså inte bara "ett sätt att deploya". Det är ett sätt att ge alla
+          samma <strong>laborationsyta</strong> och samma <strong>systemgränser</strong>.
+        </p>
+        <p class="quote">
+          Det viktiga är inte att "köra Docker". Det viktiga är att ni kan förstå hela kedjan från
+          <strong>browser</strong> till <strong>n8n</strong>, <strong>AI</strong>, <strong>CRM</strong> och
+          <strong>support</strong> utan att lokala installationer drar isär berättelsen.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Lokala krav">
+        <p class="eyebrow">Vad som behövs lokalt</p>
+        <h2>macOS och Windows: samma stack, lite olika startyta</h2>
+        <div class="grid2">
+          <div class="box">
+            <span class="badge">macOS</span>
+            <ul>
+              <li>Installera <strong>Docker Desktop for Mac</strong>.</li>
+              <li>Starta Docker Desktop och vänta tills motorn är igång.</li>
+              <li>Öppna <strong>Terminal</strong> eller iTerm i projektmappen.</li>
+              <li>Se till att portarna <code>3000</code>, <code>3001</code>, <code>3002</code>, <code>5678</code>, <code>8083</code>, <code>8084</code> och <code>8085</code> är lediga.</li>
+              <li>Om ni vill ha riktiga AI-svar: exportera <code>OPENAI_API_KEY</code> innan start.</li>
+            </ul>
+            <pre class="flow">macOS / zsh / bash
+export OPENAI_API_KEY="sk-..."
+docker compose up -d</pre>
+          </div>
+          <div class="box">
+            <span class="badge">Windows</span>
+            <ul>
+              <li>Installera <strong>Docker Desktop for Windows</strong>.</li>
+              <li>Aktivera gärna <strong>WSL2-backend</strong> i Docker Desktop.</li>
+              <li>Öppna <strong>PowerShell</strong> eller Windows Terminal i projektmappen.</li>
+              <li>Samma portar måste vara lediga som på macOS.</li>
+              <li>Om ni vill ha riktiga AI-svar: sätt <code>OPENAI_API_KEY</code> i PowerShell innan start.</li>
+            </ul>
+            <pre class="flow">Windows / PowerShell
+$env:OPENAI_API_KEY="sk-..."
+docker compose up -d</pre>
+          </div>
+        </div>
+        <p class="callout warn">
+          Vanligaste missen i början: man kör kommandon innan Docker Desktop faktiskt är klart. Börja först
+          när ni ser att Docker-motorn är igång.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Första uppstart">
+        <p class="eyebrow">Kommandon i rätt ordning</p>
+        <h2>Första uppstart: minsta fungerande sekvens för den här miljön</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Steg för steg</h3>
+            <ul>
+              <li>Gå till projektroten där <code>docker-compose.yml</code> ligger.</li>
+              <li>Kör <code>docker compose up -d</code> för att starta miljön i bakgrunden.</li>
+              <li>På en helt ny Chatwoot-volym: kör <code>docker compose run --rm chatwoot-rails bundle exec rails db:chatwoot_prepare</code> en gång.</li>
+              <li>Kör sedan <code>docker compose up -d</code> igen om ni vill vara säkra på att allt är uppe.</li>
+              <li>Kontrollera status med <code>docker compose ps</code>.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Praktiska kommandon</h3>
+            <pre class="flow">docker compose up -d
+
+docker compose run --rm chatwoot-rails \
+  bundle exec rails db:chatwoot_prepare
+
+docker compose up -d
+docker compose ps
+docker compose logs -f n8n</pre>
+            <p class="time">
+              Första körningen kan ta ett tag: images dras ned, och <code>demo-web</code> installerar npm-paket
+              innan React-demon blir tillgänglig.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Vilka tjänster startar">
+        <p class="eyebrow">Compose-filen i praktiken</p>
+        <h2>Det här är tjänsterna som ingår i vår lokala miljö</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Det ni normalt öppnar i browsern</h3>
+            <table class="service-table" aria-label="Användarvända tjänster och portar">
+              <thead>
+                <tr>
+                  <th>Tjänst</th>
+                  <th>URL</th>
+                  <th>Roll</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Projektportal</td>
+                  <td><code>http://localhost:8084</code></td>
+                  <td>Startsida med länkar, status och presentationer</td>
+                </tr>
+                <tr>
+                  <td>React Demo Store</td>
+                  <td><code>http://localhost:8083</code></td>
+                  <td>Bosses Akvariefiskar som postar till n8n</td>
+                </tr>
+                <tr>
+                  <td>Legacy Freetext Case</td>
+                  <td><code>http://localhost:8085</code></td>
+                  <td>Regex- och dataprocesseringsövning</td>
+                </tr>
+                <tr>
+                  <td>n8n</td>
+                  <td><code>http://localhost:5678</code></td>
+                  <td>Webhookar, logik, routing och HTTP-anrop</td>
+                </tr>
+                <tr>
+                  <td>Flowise</td>
+                  <td><code>http://localhost:3000</code></td>
+                  <td>AI-lager och chatflows</td>
+                </tr>
+                <tr>
+                  <td>Chatwoot</td>
+                  <td><code>http://localhost:3001</code></td>
+                  <td>Support- och chattyta</td>
+                </tr>
+                <tr>
+                  <td>Twenty</td>
+                  <td><code>http://localhost:3002</code></td>
+                  <td>CRM för personer och affärer</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="box">
+            <h3>Det som också startar i bakgrunden</h3>
+            <ul>
+              <li><strong>chatwoot-postgres</strong> och <strong>chatwoot-redis</strong> bär Chatwoots data och köer.</li>
+              <li><strong>chatwoot-sidekiq</strong> kör bakgrundsjobb åt Chatwoot.</li>
+              <li><strong>twenty-db</strong> och <strong>twenty-redis</strong> bär Twenty.</li>
+              <li><strong>twenty-worker</strong> kör bakgrundsjobb åt CRM-lagret.</li>
+              <li>All trafik i den här guiden går via publicerade <strong>localhost-portar</strong> i Compose.</li>
+            </ul>
+            <p class="callout">
+              Poängen är att ni inte manuellt installerar Postgres, Redis, Rails, Node och Python på hosten.
+              Compose startar en <strong>sammanhängande miljö</strong> där varje del har sitt eget ansvar.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Portar">
+        <p class="eyebrow">Host mot container</p>
+        <h2>Så fungerar portar: vänster sida är din dator, höger sida är containern</h2>
+        <div class="diagram-wrap" role="img" aria-label="Diagram över portmappning mellan host och containrar">
+          <svg viewBox="0 0 980 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="linePort" x1="0" x2="1">
+                <stop offset="0" stop-color="#79f0cb" />
+                <stop offset="1" stop-color="#ffbd73" />
+              </linearGradient>
+            </defs>
+            <rect x="30" y="44" width="240" height="210" rx="22" fill="#13203b" stroke="rgba(255,255,255,0.16)" />
+            <text x="150" y="84" text-anchor="middle" fill="#edf2ff" font-size="24" font-family="Fraunces, serif">Din dator</text>
+            <text x="150" y="122" text-anchor="middle" fill="#a7b5d7" font-size="15" font-family="Source Sans 3, sans-serif">browser / terminal / localhost</text>
+            <text x="150" y="170" text-anchor="middle" fill="#edf2ff" font-size="18" font-family="Source Sans 3, sans-serif">5678</text>
+            <text x="150" y="198" text-anchor="middle" fill="#edf2ff" font-size="18" font-family="Source Sans 3, sans-serif">3001</text>
+            <text x="150" y="226" text-anchor="middle" fill="#edf2ff" font-size="18" font-family="Source Sans 3, sans-serif">8083</text>
+
+            <rect x="466" y="28" width="200" height="72" rx="18" fill="#13203b" stroke="rgba(121,240,203,0.34)" />
+            <text x="566" y="58" text-anchor="middle" fill="#edf2ff" font-size="18" font-family="Source Sans 3, sans-serif">n8n</text>
+            <text x="566" y="80" text-anchor="middle" fill="#a7b5d7" font-size="14" font-family="Source Sans 3, sans-serif">5678:5678</text>
+
+            <rect x="466" y="116" width="200" height="72" rx="18" fill="#13203b" stroke="rgba(255,189,115,0.34)" />
+            <text x="566" y="146" text-anchor="middle" fill="#edf2ff" font-size="18" font-family="Source Sans 3, sans-serif">Chatwoot</text>
+            <text x="566" y="168" text-anchor="middle" fill="#a7b5d7" font-size="14" font-family="Source Sans 3, sans-serif">3001:3000</text>
+
+            <rect x="466" y="204" width="200" height="72" rx="18" fill="#13203b" stroke="rgba(138,184,255,0.34)" />
+            <text x="566" y="234" text-anchor="middle" fill="#edf2ff" font-size="18" font-family="Source Sans 3, sans-serif">React Demo</text>
+            <text x="566" y="256" text-anchor="middle" fill="#a7b5d7" font-size="14" font-family="Source Sans 3, sans-serif">8083:8081</text>
+
+            <path d="M276 170 C350 170, 388 64, 456 64" stroke="url(#linePort)" stroke-width="4" fill="none" />
+            <polygon points="464,64 452,57 452,71" fill="#79f0cb" />
+            <path d="M276 198 C350 198, 390 152, 456 152" stroke="url(#linePort)" stroke-width="4" fill="none" />
+            <polygon points="464,152 452,145 452,159" fill="#ffbd73" />
+            <path d="M276 226 C350 226, 390 240, 456 240" stroke="url(#linePort)" stroke-width="4" fill="none" />
+            <polygon points="464,240 452,233 452,247" fill="#8ab8ff" />
+
+            <text x="778" y="72" fill="#edf2ff" font-size="18" font-family="Fraunces, serif">Las sa har</text>
+            <text x="778" y="112" fill="#a7b5d7" font-size="15" font-family="Source Sans 3, sans-serif">- Vanster om kolon: port pa hosten</text>
+            <text x="778" y="140" fill="#a7b5d7" font-size="15" font-family="Source Sans 3, sans-serif">- Hoger om kolon: port inne i containern</text>
+            <text x="778" y="168" fill="#a7b5d7" font-size="15" font-family="Source Sans 3, sans-serif">- Exempel: 3001:3000 betyder</text>
+            <text x="778" y="190" fill="#a7b5d7" font-size="15" font-family="Source Sans 3, sans-serif">  localhost:3001 pa din dator -> 3000 i Chatwoot</text>
+          </svg>
+        </div>
+        <p class="callout">
+          Om en port på vänster sida redan används på din dator kommer Compose inte kunna publicera tjänsten.
+          Då behöver ni <strong>frigöra porten</strong> eller ändra mappningen.
+        </p>
+      </section>
+
+      <section class="slide" data-title="localhost vs tjänstenamn">
+        <p class="eyebrow">Nätverk inifrån och utifrån</p>
+        <h2><code>localhost</code> utifrån, tjänstenamn inifrån</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>På hosten, alltså från browsern</h3>
+            <ul>
+              <li><code>http://localhost:5678</code> öppnar n8n.</li>
+              <li><code>http://localhost:3000</code> öppnar Flowise.</li>
+              <li><code>http://localhost:3001</code> öppnar Chatwoot.</li>
+              <li><code>http://localhost:3002</code> öppnar Twenty.</li>
+            </ul>
+            <pre class="flow">Browser -> localhost:5678
+Browser -> localhost:3000</pre>
+          </div>
+          <div class="box">
+            <h3>Mellan containers på Compose-nätverket</h3>
+            <ul>
+              <li>n8n anropar Flowise via <code>http://flowise:3000</code>.</li>
+              <li>n8n anropar Twenty via <code>http://twenty:3000</code>.</li>
+              <li>n8n anropar Chatwoot API via <code>http://chatwoot-rails:3000</code>.</li>
+              <li>Chatwoot ska anropa n8n via <code>http://n8n:5678/webhook/chatwoot</code>.</li>
+            </ul>
+            <pre class="flow">Container -> flowise:3000
+Container -> twenty:3000
+Container -> n8n:5678</pre>
+          </div>
+        </div>
+        <p class="callout warn">
+          Den klassiska missen är att skriva <code>localhost</code> inne i en container. Där betyder
+          <code>localhost</code> containern själv, inte din laptop och inte någon annan tjänst i Compose.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Vår stack">
+        <p class="eyebrow">Stacken som helhet</p>
+        <h2>Så ser vår lokala stack ut när allt kör</h2>
+        <div class="stack-grid">
+          <div class="stack-card">
+            <span class="layer">Portal</span>
+            <h3>project-index</h3>
+            <p>Startsida på <code>localhost:8084</code> som gör det lätt att hitta demos, slides och ingångar.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">Insamling</span>
+            <h3>demo-web</h3>
+            <p>React-demon på <code>localhost:8083</code> som skickar leads och supportsignaler vidare till n8n.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">Övningscase</span>
+            <h3>legacy-ugly-web</h3>
+            <p>Freetext- och SQLite-caset på <code>localhost:8085</code> för regex- och dataprocessering.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">Orkestrering</span>
+            <h3>n8n</h3>
+            <p>Tar emot webhookar, håller ihop logik och skickar data vidare till rätt destination.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">AI-lager</span>
+            <h3>Flowise</h3>
+            <p>Kapslar chatflows, promptlogik och AI-svar så att AI-delen blir ett tydligt eget lager.</p>
+          </div>
+          <div class="stack-card">
+            <span class="layer">Affär & support</span>
+            <h3>Twenty + Chatwoot</h3>
+            <p>CRM för leads och affärer, plus supportyta för chatt och konversationer.</p>
+          </div>
+        </div>
+        <p class="quote">
+          I bakgrunden finns också databaser, Redis och workers. De syns mindre i browsern, men utan dem
+          blir varken Chatwoot eller Twenty särskilt användbara.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Konfiguration">
+        <p class="eyebrow">Efter första start</p>
+        <h2>Det här behöver ni konfigurera för att hela kedjan ska bli meningsfull</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Flowise</h3>
+            <ul>
+              <li>Skapa eller importera chatflows för kursens scenarier.</li>
+              <li>Sätt <code>FLOWISE_LEAD_CHATFLOW_ID</code>.</li>
+              <li>Sätt <code>FLOWISE_SUPPORT_CHATFLOW_ID</code>.</li>
+              <li>Valfritt: <code>FLOWISE_CHATWOOT_CHATFLOW_ID</code> för särskilt chattflöde.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Twenty</h3>
+            <ul>
+              <li>Skapa API-nyckel i Twenty.</li>
+              <li>Lägg den i <code>TWENTY_API_KEY</code> för n8n.</li>
+              <li>n8n använder också <code>TWENTY_API_BASE=http://twenty:3000</code> internt.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>OpenAI</h3>
+            <ul>
+              <li><code>OPENAI_API_KEY</code> går till Flowise.</li>
+              <li>Utan nyckeln kan stacken starta, men AI-svaren blir tomma eller mindre användbara.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Chatwoot</h3>
+            <ul>
+              <li>För svar tillbaka till chatten behövs <code>CHATWOOT_API_ACCESS_TOKEN</code>.</li>
+              <li>Webhook från Chatwoot till n8n ska använda <code>http://n8n:5678/webhook/chatwoot</code>.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="callout">
+          När ni ändrar env vars för en tjänst räcker det ofta att starta om just den tjänsten, till exempel
+          <code>docker compose up -d n8n</code> eller <code>docker compose up -d flowise</code>.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Secrets">
+        <p class="eyebrow">Env vars och hemligheter</p>
+        <h2>Så ska ni tänka om secrets: demo först, riktig hemlighetshantering sen</h2>
+        <div class="compare-grid">
+          <div class="compare-card">
+            <h3>I kursdemot</h3>
+            <ul>
+              <li>Målet är att komma igång snabbt och kunna visa hela arkitekturen.</li>
+              <li>Ni kommer se env vars som styr URL:er, chatflow-id:n och tokens.</li>
+              <li>Vissa demo-defaults finns för att tröskeln ska vara låg i klassrummet.</li>
+            </ul>
+          </div>
+          <div class="compare-card">
+            <h3>I riktig drift</h3>
+            <ul>
+              <li>Riktiga API-nycklar och tokens ska ligga i <code>.env</code> eller i en riktig secret manager.</li>
+              <li>Commit:a inte riktiga secrets till git.</li>
+              <li>Byt demo-lösenord, app secrets och tokens innan något lämnar labbmiljön.</li>
+            </ul>
+          </div>
+        </div>
+        <pre class="flow"># Exempel pa sekretkontrakt, inte riktiga varden
+OPENAI_API_KEY=sk-...
+TWENTY_API_KEY=...
+FLOWISE_LEAD_CHATFLOW_ID=...
+FLOWISE_SUPPORT_CHATFLOW_ID=...
+FLOWISE_CHATWOOT_CHATFLOW_ID=...
+CHATWOOT_API_ACCESS_TOKEN=...</pre>
+        <p class="callout warn">
+          Skillnaden mellan <strong>konfiguration</strong> och <strong>hemlighet</strong> är viktig:
+          en port eller URL kan ofta vara offentlig, men en API-nyckel, app secret eller access token ska
+          behandlas som känslig information.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Deploy-tänk">
+        <p class="eyebrow">Varför Docker är smidigt att deploya</p>
+        <h2>Samma kontrakt från laptop till server, men inte samma risknivå</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Varför det är smidigt</h3>
+            <ul>
+              <li>Samma images och samma tjänstegränser kan köras lokalt och på en server.</li>
+              <li>Compose beskriver hela miljön: tjänster, portar, env vars, volymer och beroenden.</li>
+              <li>Det minskar "works on my machine"-problemet vid överlämning.</li>
+              <li>Det blir lättare att deploya om bara en tjänst utan att tänka om hela systemet.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Vad som ändå saknas för riktig prod</h3>
+            <ul>
+              <li>Riktiga domäner, TLS/HTTPS och säkrare ingress.</li>
+              <li>Riktig secret-hantering och roterade nycklar.</li>
+              <li>Backup-strategi för databaser och volymer.</li>
+              <li>Övervakning, loggning och säkrare lösenord än demo-defaults.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="quote">
+          Docker gör alltså deploy <strong>mer repeterbar</strong>, inte automatiskt <strong>mer färdig</strong>.
+          Det ni vinner är samma struktur, samma kontrakt och tydligare tjänstegränser.
+        </p>
+        <p class="time">
+          I den här miljön använder vi medvetet direkta <code>localhost</code>-portar för att hålla setupen
+          enkel, tydlig och likadan för alla i klassrummet.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Felsökning & checklista">
+        <p class="eyebrow">Avslutning</p>
+        <h2>Vanliga missar och snabb checklista för att komma igång</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Vanliga missar</h3>
+            <ul>
+              <li>En annan process använder redan porten ni behöver.</li>
+              <li>Docker Desktop eller WSL2-backend är inte igång trots att terminalen är öppen.</li>
+              <li>Ni ändrar en env var men glömmer att starta om den berörda tjänsten.</li>
+              <li>Ni använder <code>localhost</code> inne i en container i stället för tjänstenamn.</li>
+              <li>Ni förväntar er AI-svar utan att <code>OPENAI_API_KEY</code> är satt.</li>
+              <li>Ni vill ha en "ren" miljö men glömmer att volymer sparar data mellan omstarter.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Snabb checklista</h3>
+            <ol class="checklist">
+              <li>Starta Docker Desktop.</li>
+              <li>Kör <code>docker compose up -d</code>.</li>
+              <li>Kör Chatwoot-prepare en gång på ny volym.</li>
+              <li>Öppna portal, n8n, Flowise, Twenty och Chatwoot.</li>
+              <li>Sätt Flowise-id:n, Twenty API key och eventuellt OpenAI/Chatwoot-token.</li>
+              <li>Importera workflows i n8n och chatflows i Flowise.</li>
+              <li>Skicka första leadet och följ körningen i n8n.</li>
+            </ol>
+          </div>
+        </div>
+        <p class="callout">
+          Om miljön går att starta på både <strong>macOS</strong> och <strong>Windows</strong> med samma
+          Compose-fil har ni redan vunnit något viktigt: <strong>arkitekturen är tydligare än maskinen</strong>.
+        </p>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const slides = Array.from(document.querySelectorAll(".slide"));
+        const countEl = document.getElementById("count");
+        const prog = document.getElementById("prog");
+        let idx = 0;
+
+        function render() {
+          slides.forEach((s, i) => s.classList.toggle("is-active", i === idx));
+          countEl.textContent = idx + 1 + " / " + slides.length;
+          prog.style.width = ((idx + 1) / slides.length) * 100 + "%";
+          const title = slides[idx].dataset.title || "";
+          document.title = title ? title + " — Docker Compose-guide" : "Docker Compose-guide";
+        }
+
+        function go(delta) {
+          idx = Math.max(0, Math.min(slides.length - 1, idx + delta));
+          render();
+        }
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+            e.preventDefault();
+            go(1);
+          }
+          if (e.key === "ArrowLeft" || e.key === "PageUp") {
+            e.preventDefault();
+            go(-1);
+          }
+          if (e.key === "Home") {
+            e.preventDefault();
+            idx = 0;
+            render();
+          }
+          if (e.key === "End") {
+            e.preventDefault();
+            idx = slides.length - 1;
+            render();
+          }
+        });
+
+        render();
+      })();
+    </script>
+  </body>
+</html>

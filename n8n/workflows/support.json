@@ -1,0 +1,119 @@
+{
+  "name": "Bosses Akvariefiskar — Support Chat Flow",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Support / chatt för Bosses Akvariefiskar\n\nDetta arbetsflöde visar samma AI-anrop som lead-flödet men returnerar ett strukturerat supportresultat till klienten.\n\nTanken är att Flowise ska ge oss kategori, förslag till svar och om ärendet bör eskaleras.",
+        "height": 200,
+        "width": 360,
+        "color": 4
+      },
+      "id": "sticky-support",
+      "name": "Anteckning: Support",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 120]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-support",
+      "name": "Webhook: support",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 360],
+      "webhookId": "support-chat-demo"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s1",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "normalize-support",
+      "name": "Läs meddelande",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [240, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://flowise:3000/api/v1/prediction/{{$env.FLOWISE_SUPPORT_CHATFLOW_ID || $env.FLOWISE_CHATFLOW_ID}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ question: $json.message }) }}",
+        "options": {}
+      },
+      "id": "http-flowise-support",
+      "name": "AI (Flowise)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 360],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const q = $('Läs meddelande').first().json.message || '';\nconst flow = items[0].json;\nconst hadHttpError = Boolean(flow.error);\nconst raw = hadHttpError ? '' : String(flow.text ?? flow.data?.text ?? flow.output ?? '');\nconst cleaned = raw.trim().replace(/^```(?:json)?\\s*/i, '').replace(/```$/i, '').trim();\nlet parsed = null;\ntry {\n  parsed = cleaned ? JSON.parse(cleaned) : null;\n} catch {}\nconst lower = String(q).toLowerCase();\nconst fallbackCategory = /tidsmaskin|paradox/.test(lower)\n  ? 'time_machine_issue'\n  : /fortfarande d[oö]d|r[oö]r sig inte|[aå]teruppliv|stilla ?d[oö]d/.test(lower)\n    ? 'resurrection_support'\n    : /fick tv[aå]|leverans|frakt|skadad|saknas/.test(lower)\n      ? 'shipping_or_subscription'\n      : 'general_question';\nconst fallbackEscalate = /eskalera|arg|reklamera|fel fisk|fel produkt|fortfarande d[oö]d|paradox/.test(lower);\nconst reply = parsed?.reply || raw || 'Tyvärr kunde jag inte generera svar just nu. Kontrollera Flowise eller OpenAI-installationen.';\nconst escalate = typeof parsed?.escalate === 'boolean' ? parsed.escalate : hadHttpError || fallbackEscalate || reply.length < 18;\nconst category = parsed?.category || fallbackCategory;\nconst reason = parsed?.reason || (escalate ? 'Ärendet är för oklart eller för konstigt för första linjen.' : 'Kan hanteras i första linjen med standardsvar.');\nitems[0].json = { reply, escalate, category, reason, meta: { question: q, raw } };\nreturn items;"
+      },
+      "id": "code-escalate",
+      "name": "Svar + escalate (demo)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 360]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ reply: $json.reply, escalate: $json.escalate, category: $json.category, reason: $json.reason }) }}",
+        "options": {}
+      },
+      "id": "respond-support",
+      "name": "Svara webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 360]
+    }
+  ],
+  "connections": {
+    "Webhook: support": {
+      "main": [[{ "node": "Läs meddelande", "type": "main", "index": 0 }]]
+    },
+    "Läs meddelande": {
+      "main": [[{ "node": "AI (Flowise)", "type": "main", "index": 0 }]]
+    },
+    "AI (Flowise)": {
+      "main": [[{ "node": "Svar + escalate (demo)", "type": "main", "index": 0 }]]
+    },
+    "Svar + escalate (demo)": {
+      "main": [[{ "node": "Svara webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": []
+}

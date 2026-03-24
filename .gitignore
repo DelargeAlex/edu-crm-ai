@@ -1,0 +1,38 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Node / frontend
+node_modules/
+demo-react/node_modules/
+demo-react/dist/
+dist/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Runtime data
+*.log
+*.pid
+*.sqlite
+*.db
+
+# Docker / local volumes and temp
+.docker/
+tmp/
+.serverless/
+*.zip

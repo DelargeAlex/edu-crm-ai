@@ -1,0 +1,158 @@
+{
+  "name": "Legacy SQLite Regex - Starter",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Starterworkflow för elever\n\n1. Hämta senaste legacy-raden från SQLite via legacy-tjänsten.\n2. Fyll i regex-logiken i noden **TODO: regex-extraktion**.\n3. Kör sedan reward-payloaden mot `/webhook/legacy-reward-preview`.\n\nMålet är att visa att en enda blob kan bli strukturerad data i n8n.",
+        "height": 240,
+        "width": 360,
+        "color": 5
+      },
+      "id": "sticky-start",
+      "name": "Anteckning: starter",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "When clicking 'Execute workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://legacy-ugly-web:8086/api/submissions/latest",
+        "options": {}
+      },
+      "id": "http-latest-row",
+      "name": "Hämta senaste SQLite-rad",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        360
+      ],
+      "notesInFlow": true,
+      "notes": "Legacy-tjänsten läser SQLite-filen och returnerar senaste raden som JSON."
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = items[0].json;\nitems[0].json = {\n  submissionId: row.id,\n  company: row.company,\n  rawBlob: row.raw_blob ?? row.rawBlob ?? '',\n  createdAt: row.created_at ?? row.createdAt ?? '',\n};\nreturn items;"
+      },
+      "id": "code-normalize-row",
+      "name": "Normalisera legacy-rad",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = String($json.rawBlob || '');\n\nconst pick = (label) => {\n  const escaped = label.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n  const match = raw.match(new RegExp(`${escaped}=([^|]+)`, 'i'));\n  return match ? match[1].trim() : '';\n};\n\n// TODO för elever:\n// Byt ut tomma strängar nedan mot riktiga regex-uttryck eller använd pick(...).\n// Exempel: name: pick('namn')\n// Exempel: issue: pick('kommentar')\n\nitems[0].json = {\n  ...$json,\n  name: '',\n  email: '',\n  phone: '',\n  product: '',\n  quantity: '',\n  city: '',\n  channel: '',\n  issue: '',\n  profileUrl: '',\n};\n\nreturn items;"
+      },
+      "id": "code-student-regex",
+      "name": "TODO: regex-extraktion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = items[0].json;\nconst category = /partner|event|pr/i.test(`${j.product} ${j.issue}`)\n  ? 'partnership'\n  : /dubbla|skadad|problem|fel/i.test(`${j.product} ${j.issue}`)\n    ? 'support_case'\n    : /offert|hotell|premium|antal|present|lobby/i.test(`${j.product} ${j.issue}`)\n      ? 'bulk_order'\n      : 'general_inquiry';\n\nconst payload = {\n  submissionId: j.submissionId,\n  company: j.company,\n  name: j.name,\n  email: j.email,\n  phone: j.phone,\n  product: j.product,\n  quantity: j.quantity,\n  city: j.city,\n  category,\n  issue: j.issue || `Importerad från ${j.company}`,\n  source: 'n8n-legacy-regex-starter',\n  profileUrl: j.profileUrl,\n  rawBlob: j.rawBlob,\n};\n\nconst body = JSON.stringify(payload).replace(/'/g, \"'\\\\''\");\nitems[0].json = {\n  ...j,\n  rewardPayload: payload,\n  rewardWebhook: 'http://localhost:5678/webhook/legacy-reward-preview',\n  rewardCurl: `curl -sS -X POST http://localhost:5678/webhook/legacy-reward-preview -H \"Content-Type: application/json\" -d '${body}' > preview.html`,\n};\nreturn items;"
+      },
+      "id": "code-build-reward-payload",
+      "name": "Bygg reward-payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## När eleverna är klara\n\n- Kontrollera att `name`, `email`, `product`, `quantity`, `city` och `profileUrl` faktiskt fylls.\n- Kör `rewardCurl` från execution-outputen eller skapa ett eget HTTP Request-steg mot `/webhook/legacy-reward-preview`.\n- Jämför sedan med solution-workflowet om ni vill se en komplett version.",
+        "height": 220,
+        "width": 340,
+        "color": 4
+      },
+      "id": "sticky-after",
+      "name": "Anteckning: nasta steg",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "Hämta senaste SQLite-rad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hämta senaste SQLite-rad": {
+      "main": [
+        [
+          {
+            "node": "Normalisera legacy-rad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera legacy-rad": {
+      "main": [
+        [
+          {
+            "node": "TODO: regex-extraktion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TODO: regex-extraktion": {
+      "main": [
+        [
+          {
+            "node": "Bygg reward-payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

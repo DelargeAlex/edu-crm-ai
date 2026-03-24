@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Projektportal - Bosses Akvariefiskar och case</title>
+    <style>
+      :root {
+        --bg: #0d1118;
+        --panel: #151b26;
+        --card: #1e2738;
+        --text: #ecf1ff;
+        --muted: #9eb0d4;
+        --accent: #68d6ff;
+        --ok: #49d893;
+        --warn: #ffd273;
+        --err: #ff7b8f;
+        font-family: "Segoe UI", Roboto, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: radial-gradient(1000px 500px at 10% 0%, #243b6e 0%, var(--bg) 52%);
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 2rem 1.2rem 3rem;
+      }
+      h1 { margin: 0 0 0.4rem; font-size: 2rem; }
+      .sub { color: var(--muted); max-width: 72ch; margin: 0 0 1.2rem; }
+      .grid { display: grid; gap: 1rem; }
+      .services { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+      .card {
+        border: 1px solid #33476a;
+        background: linear-gradient(165deg, #1f2a40 0%, var(--card) 100%);
+        border-radius: 14px;
+        padding: 1rem;
+      }
+      .card h3 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+      .status {
+        font-size: 0.78rem;
+        border-radius: 999px;
+        padding: 0.2rem 0.55rem;
+        border: 1px solid #3d4f70;
+        color: var(--muted);
+      }
+      .status.ok { color: var(--ok); border-color: rgba(73, 216, 147, .4); }
+      .status.warn { color: var(--warn); border-color: rgba(255, 210, 115, .4); }
+      .status.err { color: var(--err); border-color: rgba(255, 123, 143, .4); }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover { text-decoration: underline; }
+      .linklist { margin: 0.45rem 0 0; padding-left: 1rem; }
+      .linklist li { margin: 0.25rem 0; color: var(--muted); }
+      .section {
+        margin-top: 1.1rem;
+        border: 1px solid #2f3d59;
+        border-radius: 14px;
+        background: var(--panel);
+        padding: 1rem;
+      }
+      .section h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
+      .small { color: var(--muted); font-size: .9rem; }
+      code {
+        background: rgba(0,0,0,.25);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 6px;
+        padding: .1rem .35rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Projektportal: Bosses Akvariefiskar + kurscase</h1>
+      <p class="sub">
+        Den här sidan körs på <code>localhost:8084</code> (eller <code>localhost:80</code> om porten är fri) och samlar länkar till alla delar i demot:
+        n8n, Flowise, Chatwoot, Twenty, React-webbapp, legacy-case och presentationer.
+      </p>
+
+      <section class="grid services" aria-label="Tjänster">
+        <article class="card" data-url="http://localhost:5678">
+          <div class="row">
+            <h3>n8n</h3>
+            <span class="status">Kontrollerar...</span>
+          </div>
+          <p class="small">Orkestrering av arbetsflöden.</p>
+          <a href="http://localhost:5678" target="_blank" rel="noreferrer">Öppna n8n</a>
+        </article>
+
+        <article class="card" data-url="http://localhost:3000">
+          <div class="row">
+            <h3>Flowise</h3>
+            <span class="status">Kontrollerar...</span>
+          </div>
+          <p class="small">AI/chatflow-lager.</p>
+          <a href="http://localhost:3000" target="_blank" rel="noreferrer">Öppna Flowise</a>
+        </article>
+
+        <article class="card" data-url="http://localhost:3001">
+          <div class="row">
+            <h3>Chatwoot</h3>
+            <span class="status">Kontrollerar...</span>
+          </div>
+          <p class="small">Support- och chatgränssnitt.</p>
+          <a href="http://localhost:3001" target="_blank" rel="noreferrer">Öppna Chatwoot</a>
+        </article>
+
+        <article class="card" data-url="http://localhost:3002">
+          <div class="row">
+            <h3>Twenty CRM</h3>
+            <span class="status">Kontrollerar...</span>
+          </div>
+          <p class="small">CRM för lead/kontakt/affär.</p>
+          <a href="http://localhost:3002" target="_blank" rel="noreferrer">Öppna Twenty</a>
+        </article>
+
+        <article class="card" data-url="http://localhost:8083">
+          <div class="row">
+            <h3>React Demo Store</h3>
+            <span class="status">Kontrollerar...</span>
+          </div>
+          <p class="small">Bosses Akvariefiskar med döda fiskar, tillägg och premiumabsurditeter.</p>
+          <a href="http://localhost:8083" target="_blank" rel="noreferrer">Öppna React-appen</a>
+        </article>
+
+        <article class="card" data-url="http://localhost:8085">
+          <div class="row">
+            <h3>Legacy Freetext Case</h3>
+            <span class="status">Kontrollerar...</span>
+          </div>
+          <p class="small">Ful hemsida + SQLite-blobbar för regex, dataprocessering och reward-preview.</p>
+          <a href="http://localhost:8085" target="_blank" rel="noreferrer">Öppna legacy-caset</a>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2>Presentationer (öppnas i webbläsaren)</h2>
+        <ul class="linklist">
+          <li><a href="/slides/forelasning-1-ai-crm-stack.html" target="_blank" rel="noreferrer">Föreläsning 1 av 2</a></li>
+          <li><a href="/slides/forelasning-2-ai-crm-stack.html" target="_blank" rel="noreferrer">Föreläsning 2 av 2</a></li>
+          <li><a href="/slides/KURSPLAN-2-LEKTIONER.md" target="_blank" rel="noreferrer">Kursplan</a></li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Flowise-importer</h2>
+        <ul class="linklist">
+          <li><a href="/flowise/import/lead-qualifier-chatflow.json" target="_blank" rel="noreferrer">Lead Qualifier chatflow</a></li>
+          <li><a href="/flowise/import/support-triage-chatflow.json" target="_blank" rel="noreferrer">Support Triage chatflow</a></li>
+          <li><a href="/flowise/README.md" target="_blank" rel="noreferrer">Flowise-guide</a></li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Case och uppgifter</h2>
+        <ul class="linklist">
+          <li><a href="/legacy-case/README.md" target="_blank" rel="noreferrer">Legacy Freetext Case README</a></li>
+          <li><a href="/n8n/README.md" target="_blank" rel="noreferrer">n8n workflow guide</a></li>
+          <li><a href="/n8n/workflows/legacy-regex-starter.json" target="_blank" rel="noreferrer">Legacy regex starter workflow</a></li>
+          <li><a href="/n8n/workflows/legacy-regex-solution.json" target="_blank" rel="noreferrer">Legacy regex solution workflow</a></li>
+          <li><a href="/forelasning/roliga-case-och-uppgifter.md" target="_blank" rel="noreferrer">Roliga case och elevuppgifter</a></li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      function withTimeout(url, timeoutMs = 2500) {
+        return new Promise((resolve) => {
+          const ctrl = new AbortController();
+          const timeout = setTimeout(() => {
+            ctrl.abort();
+            resolve(false);
+          }, timeoutMs);
+          fetch(url, { mode: "no-cors", signal: ctrl.signal })
+            .then(() => {
+              clearTimeout(timeout);
+              resolve(true);
+            })
+            .catch(() => {
+              clearTimeout(timeout);
+              resolve(false);
+            });
+        });
+      }
+
+      async function checkServices() {
+        const cards = Array.from(document.querySelectorAll("[data-url]"));
+        await Promise.all(
+          cards.map(async (card) => {
+            const url = card.getAttribute("data-url");
+            const statusEl = card.querySelector(".status");
+            const ok = await withTimeout(url);
+            if (ok) {
+              statusEl.textContent = "Svarar";
+              statusEl.className = "status ok";
+            } else {
+              statusEl.textContent = "Ej nåbar";
+              statusEl.className = "status err";
+            }
+          }),
+        );
+      }
+
+      checkServices();
+      setInterval(checkServices, 15000);
+    </script>
+  </body>
+</html>

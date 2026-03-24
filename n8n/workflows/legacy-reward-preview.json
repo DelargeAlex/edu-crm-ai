@@ -1,0 +1,98 @@
+{
+  "name": "Legacy Reward Preview Webhook",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Reward-webhook\n\nPosta strukturerad JSON hit när regex-övningen är klar.\n\nWebhook-path: `/webhook/legacy-reward-preview`\n\nSvaret blir HTML som visar tabell, kort sammanfattning och belöningsbild från `profileUrl`.",
+        "height": 220,
+        "width": 360,
+        "color": 6
+      },
+      "id": "sticky-reward",
+      "name": "Anteckning: reward",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "legacy-reward-preview",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-reward",
+      "name": "Webhook: legacy reward preview",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ],
+      "webhookId": "legacy-reward-preview-demo"
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = items[0].json;\nconst body = root.body !== undefined ? root.body : root;\nconst esc = (value) => String(value ?? '')\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;')\n  .replace(/\\\"/g, '&quot;');\n\nconst payload = {\n  submissionId: body.submissionId ?? '',\n  company: body.company ?? 'Kjells Konserverade Koi',\n  name: body.name ?? '',\n  email: body.email ?? '',\n  phone: body.phone ?? '',\n  product: body.product ?? '',\n  quantity: body.quantity ?? '',\n  city: body.city ?? '',\n  category: body.category ?? 'legacy_case',\n  issue: body.issue ?? '',\n  source: body.source ?? 'n8n-webhook',\n  profileUrl: body.profileUrl ?? '',\n  rawBlob: body.rawBlob ?? body.blob ?? '',\n};\n\nconst rows = [\n  ['Submission ID', payload.submissionId],\n  ['Företag', payload.company],\n  ['Namn', payload.name],\n  ['E-post', payload.email],\n  ['Telefon', payload.phone],\n  ['Produkt', payload.product],\n  ['Antal', payload.quantity],\n  ['Stad', payload.city],\n  ['Kategori', payload.category],\n  ['Källa', payload.source],\n  ['Kommentar', payload.issue],\n].filter(([, value]) => value);\n\nconst tableRows = rows.map(([label, value]) => `<tr><th>${esc(label)}</th><td>${esc(value)}</td></tr>`).join('');\nconst rawBlobBlock = payload.rawBlob\n  ? `<details><summary>Visa ursprunglig blob</summary><pre>${esc(payload.rawBlob)}</pre></details>`\n  : '';\nconst previewCard = payload.profileUrl\n  ? `<section class=\\\"preview\\\"><img src=\\\"${esc(payload.profileUrl)}\\\" alt=\\\"Reward preview\\\" /><div><h2>Regex reward unlocked</h2><p>Blobben är nu uppstrukturerad. Eleven får direkt en visuell belöning när \\`profileUrl\\` lyckats extraheras korrekt.</p><p class=\\\"tiny\\\">Tips: byt bild-URL eller avatar-generator om ni vill göra olika teman per case.</p></div></section>`\n  : `<section class=\\\"preview preview-empty\\\"><div><h2>Ingen bild vald</h2><p>Skicka med <code>profileUrl</code> för att låsa upp reward-bilden.</p></div></section>`;\n\nitems[0].json = {\n  ...payload,\n  html: `<!doctype html>\n<html lang=\\\"sv\\\">\n  <head>\n    <meta charset=\\\"utf-8\\\" />\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\" />\n    <title>Legacy reward preview</title>\n    <style>\n      :root {\n        --bg: #08111d;\n        --panel: #14253c;\n        --card: #19324f;\n        --text: #edf7ff;\n        --muted: #a9c3d8;\n        --accent: #7ce6ca;\n        --accent2: #ffc777;\n      }\n      * { box-sizing: border-box; }\n      body {\n        margin: 0;\n        font-family: \\\"Segoe UI\\\", sans-serif;\n        color: var(--text);\n        background:\n          radial-gradient(1000px 520px at 10% 0%, rgba(124, 230, 202, 0.16), transparent 48%),\n          radial-gradient(860px 420px at 92% 10%, rgba(255, 199, 119, 0.15), transparent 44%),\n          linear-gradient(180deg, #08111d, #0d1827);\n      }\n      main {\n        max-width: 980px;\n        margin: 0 auto;\n        padding: 2rem 1.15rem 3rem;\n      }\n      .hero, .panel {\n        border-radius: 20px;\n        padding: 1rem 1.1rem 1.2rem;\n        background: linear-gradient(180deg, rgba(25, 50, 79, 0.96), rgba(20, 37, 60, 0.96));\n        border: 1px solid rgba(255, 255, 255, 0.08);\n      }\n      .hero h1 { margin: 0 0 0.35rem; font-size: clamp(1.8rem, 3vw, 2.5rem); }\n      .hero p, .tiny { color: var(--muted); }\n      .pill {\n        display: inline-block;\n        margin-bottom: 0.7rem;\n        padding: 0.28rem 0.62rem;\n        border-radius: 999px;\n        background: rgba(124, 230, 202, 0.12);\n        color: var(--accent);\n        font-size: 0.82rem;\n        letter-spacing: 0.05em;\n        text-transform: uppercase;\n      }\n      .grid {\n        display: grid;\n        grid-template-columns: 1.1fr 0.9fr;\n        gap: 1rem;\n        margin-top: 1rem;\n      }\n      table {\n        width: 100%;\n        border-collapse: collapse;\n      }\n      th, td {\n        padding: 0.65rem 0.72rem;\n        border-bottom: 1px solid rgba(255, 255, 255, 0.08);\n        text-align: left;\n        vertical-align: top;\n      }\n      th { width: 32%; color: var(--accent2); font-weight: 700; }\n      .preview {\n        display: grid;\n        gap: 0.95rem;\n        align-items: start;\n      }\n      .preview img {\n        width: 100%;\n        max-width: 280px;\n        aspect-ratio: 1 / 1;\n        object-fit: cover;\n        border-radius: 18px;\n        border: 1px solid rgba(255, 255, 255, 0.1);\n        background: rgba(255, 255, 255, 0.04);\n      }\n      .preview-empty {\n        min-height: 240px;\n        place-items: center;\n      }\n      details { margin-top: 1rem; }\n      pre {\n        overflow: auto;\n        white-space: pre-wrap;\n        padding: 0.8rem;\n        border-radius: 12px;\n        background: rgba(0, 0, 0, 0.28);\n        border: 1px solid rgba(255, 255, 255, 0.08);\n      }\n      code {\n        font-family: ui-monospace, monospace;\n        background: rgba(255, 255, 255, 0.06);\n        border-radius: 6px;\n        padding: 0.1rem 0.3rem;\n      }\n      @media (max-width: 860px) {\n        .grid { grid-template-columns: 1fr; }\n      }\n    </style>\n  </head>\n  <body>\n    <main>\n      <section class=\\\"hero\\\">\n        <span class=\\\"pill\\\">Webhook reward</span>\n        <h1>Legacy-datan är nu begriplig</h1>\n        <p>Det här är sista steget i övningen: regex-parsad blob in, tydlig preview ut. Samma princip fungerar för CRM, sheets eller andra integrationsmål.</p>\n      </section>\n      <section class=\\\"grid\\\">\n        <article class=\\\"panel\\\">\n          <h2>Strukturerad data</h2>\n          <table>${tableRows || '<tr><td colspan=\\\"2\\\">Ingen data skickades in.</td></tr>'}</table>\n          ${rawBlobBlock}\n        </article>\n        <aside class=\\\"panel\\\">\n          ${previewCard}\n        </aside>\n      </section>\n    </main>\n  </body>\n</html>`\n};\nreturn items;"
+      },
+      "id": "code-build-reward-html",
+      "name": "Bygg reward-HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "respond-reward",
+      "name": "Svara med HTML",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        340
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: legacy reward preview": {
+      "main": [
+        [
+          {
+            "node": "Bygg reward-HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bygg reward-HTML": {
+      "main": [
+        [
+          {
+            "node": "Svara med HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

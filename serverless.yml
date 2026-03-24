@@ -1,0 +1,106 @@
+service: edu-retrobymistake
+
+provider:
+  name: aws
+  frameworkVersion: 4
+  runtime: nodejs22.x
+  region: eu-north-1
+  profile: private
+  stage: ${opt:stage, 'dev'}
+
+plugins:
+  - serverless-s3-sync
+
+custom:
+  bucketName: ${self:service}-${self:provider.stage}-${self:provider.region}
+  
+  s3Sync:
+    - bucketName: ${self:custom.bucketName}
+      localDir: ./slides
+      deleteRemoved: false
+      defaultContentType: 'text/html'
+      params:
+        - index.html:
+            CacheControl: 'max-age=3600'
+            ContentType: 'text/html'
+        - "*.html":
+            CacheControl: 'max-age=3600'
+            ContentType: 'text/html'
+        - "*.css":
+            CacheControl: 'max-age=86400'
+            ContentType: 'text/css'
+        - "*.js":
+            CacheControl: 'max-age=86400'
+            ContentType: 'application/javascript'
+        - "*.png":
+            CacheControl: 'max-age=604800'
+            ContentType: 'image/png'
+        - "*.svg":
+            CacheControl: 'max-age=604800'
+            ContentType: 'image/svg+xml'
+        - "*.jpg":
+            CacheControl: 'max-age=604800'
+            ContentType: 'image/jpeg'
+      excludeFromSync:
+        - "node_modules/**"
+        - ".git/**"
+        - "*.md"
+        - "!README.md"
+        - "package*.json"
+        - "serverless.yml"
+        - ".s3ignore"
+        - ".gitignore"
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - GET
+                - HEAD
+              AllowedOrigins:
+                - "*"
+              MaxAge: 3000
+
+    S3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref S3Bucket
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:GetObject
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref S3Bucket
+                  - /*
+
+  Outputs:
+    WebsiteURL:
+      Description: URL of the website
+      Value: !GetAtt S3Bucket.WebsiteURL
+    BucketName:
+      Description: Name of the S3 bucket
+      Value: !Ref S3Bucket
+    BucketNameCustom:
+      Description: Custom bucket name reference
+      Value: ${self:service}-${self:provider.stage}-${self:provider.region}
+

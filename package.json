@@ -1,0 +1,13 @@
+{
+  "name": "edu-retrobymistake",
+  "version": "1.0.0",
+  "description": "Edu-retrobymistake",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:prod": "serverless deploy --stage prod",
+    "remove": "serverless remove"
+  },
+  "devDependencies": {
+    "serverless-s3-sync": "^3.2.0"
+  }
+}

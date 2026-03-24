@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leadhantering, AI och lokal stack</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-accent: #111827;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.18);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --primary: #22d3ee;
+      --secondary: #a78bfa;
+      --shadow: 0 20px 40px rgba(2, 6, 23, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(34, 211, 238, 0.2), transparent 35%),
+        radial-gradient(circle at 80% 10%, rgba(167, 139, 250, 0.2), transparent 35%),
+        linear-gradient(160deg, var(--bg) 0%, var(--bg-accent) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .container {
+      width: min(980px, 100%);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .cards--single {
+      grid-template-columns: 1fr;
+      margin-bottom: 1.25rem;
+    }
+
+    .cards-separator {
+      margin: 0 0 1.25rem;
+      border: 0;
+      border-top: 1px solid rgba(203, 213, 225, 0.3);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 1.25rem 1.25rem 1.5rem;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .card:hover,
+    .card:focus-visible {
+      transform: translateY(-4px);
+      border-color: rgba(34, 211, 238, 0.6);
+      box-shadow: 0 24px 48px rgba(2, 6, 23, 0.55);
+      outline: none;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #0f172a;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      margin-bottom: 0.9rem;
+      font-weight: 600;
+    }
+
+    .card h2 {
+      margin: 0 0 0.6rem;
+      font-size: 1.2rem;
+      line-height: 1.35;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.96rem;
+    }
+
+    .footer {
+      margin-top: 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Leadhantering, AI och lokal integrationsstack</h1>
+      <p class="subtitle">Lektion 1 bygger förståelse för problemdomän och arkitektur. Lektion 2 tar vid med felsökning, runtime och labb. Den nya miljöguiden hjälper er att starta samma Docker-miljö lokalt på macOS och Windows.</p>
+    </header>
+
+    <section class="cards cards--single">
+      <a class="card" href="./docker-compose-kom-igang.html">
+        <span class="badge">Miljöguide</span>
+        <h2>Docker Compose - kom igång lokalt på macOS och Windows</h2>
+        <p>Guide till lokal setup, vilka tjänster som startar, portar, interna tjänstenamn, secrets och varför samma Docker-kontrakt gör deploy enklare.</p>
+      </a>
+    </section>
+
+    <hr class="cards-separator" />
+
+    <section class="cards">
+      <a class="card" href="./forelasning-1-ai-crm-stack.html">
+        <span class="badge">Föreläsning 1</span>
+        <h2>Lektion 1 - Problemdomän, modellering och stack</h2>
+        <p>Bosses Akvariefiskar som case, historik, UML, agilt arbetssätt, vendor lock-in, open source, Docker och vår lokala leadstack.</p>
+      </a>
+
+      <a class="card" href="./forelasning-2-ai-crm-stack.html">
+        <span class="badge">Föreläsning 2</span>
+        <h2>Lektion 2 - Felsökning, runtime och mini-labb</h2>
+        <p>Statuskoder, n8n executions, miljövariabler, Flowise, Twenty, Chatwoot och strukturerad felsökning i Bosses-caset.</p>
+      </a>
+    </section>
+
+    <p class="footer">Presentationsindex för kursens två steg plus en praktisk guide till dockermiljön.</p>
+  </main>
+</body>
+</html>
