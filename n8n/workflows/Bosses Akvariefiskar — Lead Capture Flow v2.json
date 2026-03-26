@@ -1,0 +1,447 @@
+{
+  "name": "Bosses Akvariefiskar — Lead Capture Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Bosses lead-flöde\n\nDetta flöde tar emot absurda leadförfrågningar för Bosses Akvariefiskar och skickar dem till ett dedikerat Flowise-chatflow för leadkvalificering.\n\nAktivera noden **OpenAI fallback** och koppla in **OpenAI API credentials** om du vill ha riktig fallback när Flowise saknar svar.",
+        "height": 220,
+        "width": 380,
+        "color": 5
+      },
+      "id": "a57fc665-9c0d-4dc1-8d1b-690d8fa35f1d",
+      "name": "Anteckning: OpenAI",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8f49b6c2-ae51-4a4d-9f51-b3af073489a5",
+      "name": "Webhook: lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        144
+      ],
+      "webhookId": "lead-capture-demo"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "13607ebb-a4d8-4c07-8dbf-81d5231fc716",
+      "name": "Normalisera inmatning",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://flowise:3000/api/v1/prediction/{{$env.FLOWISE_LEAD_CHATFLOW_ID || $env.FLOWISE_CHATFLOW_ID}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ question: $json.message }) }}",
+        "options": {}
+      },
+      "id": "88086379-0f39-45ec-a97c-8785a8ed7e82",
+      "name": "AI enrichment (Flowise)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        112,
+        144
+      ],
+      "notesInFlow": true,
+      "continueOnFail": true,
+      "notes": "Skickar användarens meddelande till Flowise prediction API. Använder helst FLOWISE_LEAD_CHATFLOW_ID och faller tillbaka till FLOWISE_CHATFLOW_ID."
+    },
+    {
+      "parameters": {
+        "jsCode": "const n = $('Normalisera inmatning').first().json;\nconst flow = items[0].json;\nconst raw = String(flow.text ?? flow.data?.text ?? flow.output ?? '');\nconst cleaned = raw.trim().replace(/^```(?:json)?\\s*/i, '').replace(/```$/i, '').trim();\nlet parsed = null;\ntry {\n  parsed = cleaned ? JSON.parse(cleaned) : null;\n} catch {}\nconst msg = String(n.message || '');\nconst lower = msg.toLowerCase();\nconst fallbackLeadType = /reportage|press|pr|influencer|partner|white label/.test(lower)\n  ? 'press_or_partnership'\n  : /fortfarande d[oö]d|r[oö]r sig inte|reklam|fel fisk|skadad/.test(lower)\n    ? 'complaint_reroute'\n    : /tidsmaskin/.test(lower)\n      ? 'time_machine_interest'\n      : /[aå]teruppliv|addon|till[aä]gg|upsell/.test(lower)\n        ? 'addon_question'\n        : /offert|volym|24|12|hotell|reception|kontor|butik|presentbox|avdelning/.test(lower)\n          ? 'bulk_order'\n          : 'unclear';\nconst fallbackCustomerType = /vi driver|vi (?:är|ar)|hotell|kontor|butik|team|avdelning|presentbox|upplevelsecenter|partner/.test(lower)\n  ? 'B2B'\n  : /^hej! jag|^hej jag|\\bjag\\b/.test(lower)\n    ? 'Privatkund'\n    : 'Oklart';\nconst fallbackProduct = /tidsmaskin/.test(lower)\n  ? 'Tidsmaskin Experience Pack'\n  : /[aå]teruppliv/.test(lower)\n    ? 'Återupplivning Plus'\n    : /m[aå]nadens|abonn/.test(lower)\n      ? 'Månadens Mystiskt Orörliga Fisk'\n      : 'Zombie Guppy Deluxe';\nconst fallbackPriority = /fortfarande d[oö]d|press|reportage|partner/.test(lower)\n  ? 'high'\n  : /volym|offert|hotell|kontor|upplevelsecenter/.test(lower)\n    ? 'medium'\n    : 'low';\nitems[0].json = {\n  name: n.name,\n  email: n.email,\n  message: n.message,\n  aiRaw: raw,\n  aiSummary: String(parsed?.salesSummary || raw || ''),\n  leadType: parsed?.leadType || fallbackLeadType,\n  customerType: parsed?.customerType || fallbackCustomerType,\n  productSuggestion: parsed?.productSuggestion || fallbackProduct,\n  priority: parsed?.priority || fallbackPriority,\n  routeTo: parsed?.routeTo || (fallbackLeadType === 'complaint_reroute' ? 'support' : 'sales'),\n  funAngle: parsed?.funAngle || 'Bosses absurda affärsmodell gör leadet minnesvärt.',\n  flowiseOk: Boolean(raw),\n};\nreturn items;"
+      },
+      "id": "476538b9-c6b8-485a-898c-78183be3ba12",
+      "name": "Bygg kontext + AI-svar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "e86222bb-8416-4bc6-8ffc-c7d1e71082f0",
+      "name": "OpenAI fallback (valfri)",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        16,
+        352
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const full = String(items[0].json.name || '').trim();\nconst parts = full.split(/\\s+/).filter(Boolean);\nconst firstName = parts[0] || 'Okänd';\nconst lastName = parts.length > 1 ? parts.slice(1).join(' ') : '-';\nitems[0].json.firstName = firstName;\nitems[0].json.lastName = lastName;\nreturn items;"
+      },
+      "id": "8eb3b2fa-feba-4d15-97c5-a3139a3b4379",
+      "name": "Klassificera intent (lead/support)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.TWENTY_API_BASE}}/rest/people",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TWENTY_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: { firstName: $json.firstName, lastName: $json.lastName }, emails: { primaryEmail: $json.email } }) }}",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "id": "59a03d3d-87ab-46f0-9267-999438b6fe8e",
+      "name": "Send to CRM — skapa person",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        816,
+        208
+      ],
+      "notesInFlow": true,
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput",
+      "notes": "Twenty REST kan variera mellan versioner. Justera payload i README/playground om detta felar."
+    },
+    {
+      "parameters": {
+        "jsCode": "if ($input.first().json.error) return {}\nconst prev = $('Klassificera intent (lead/support)').first().json;\nconst r = $input.first().json;\nconst id = r.id || r.data?.createPerson?.id || r.data?.people[0]?.id || r.records?.[0]?.id;\nif (!id) {\n  throw new Error('Kunde inte läsa person-id från Twenty. Kontrollera TWENTY_API_KEY och REST-schema. Svar: ' + JSON.stringify(r).slice(0, 500));\n}\nitems[0].json = {\n  ...prev,\n  personId: id,\n};\nreturn items;"
+      },
+      "id": "755da43b-d03a-4167-93de-6f08df586113",
+      "name": "Läs ut personId",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.TWENTY_API_BASE}}/rest/opportunities",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TWENTY_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: 'Bosses: ' + $json.leadType + ' / ' + $json.productSuggestion + ' (' + $json.email + ')', stage: 'NEW', pointOfContactId: $json.personId }) }}",
+        "options": {}
+      },
+      "id": "b916db3c-5160-44fa-9ae9-a74e6ed5fb45",
+      "name": "Send to CRM — skapa affär",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        -16
+      ],
+      "notesInFlow": true,
+      "notes": "Skapar en enkel Opportunity kopplad till personen. Fält som stage kan behöva justeras mot er Twenty-workspace."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'processed', leadType: $('Läs ut personId').first().json.leadType, customerType: $('Läs ut personId').first().json.customerType, productSuggestion: $('Läs ut personId').first().json.productSuggestion, priority: $('Läs ut personId').first().json.priority, routeTo: $('Läs ut personId').first().json.routeTo, aiSummary: $('Läs ut personId').first().json.aiSummary, personId: $('Läs ut personId').first().json.personId }) }}",
+        "options": {}
+      },
+      "id": "a1435c5a-e452-481f-b50b-dbe9e11a65f4",
+      "name": "Svara webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "889d1330-4d43-4353-ac88-9caba88df4c3",
+              "leftValue": "={{ $json.error.message }}",
+              "rightValue": "=duplicate entry",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1008,
+        432
+      ],
+      "id": "aa36ed87-4bb4-4562-b172-c18c0f84fea4",
+      "name": "Om duplicated"
+    },
+    {
+      "parameters": {
+        "url": "={{$env.TWENTY_API_BASE}}/rest/people?filter[email][eq]={{$json.email}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TWENTY_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: { firstName: $json.firstName, lastName: $json.lastName }, emails: { primaryEmail: $json.email } }) }}",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "id": "882f8411-5cd3-4fbe-8f0c-60bcc6a3a524",
+      "name": "CRM — Hämta person",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        208
+      ],
+      "notesInFlow": true,
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput",
+      "notes": "Twenty REST kan variera mellan versioner. Justera payload i README/playground om detta felar."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook: lead": {
+      "main": [
+        [
+          {
+            "node": "Normalisera inmatning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera inmatning": {
+      "main": [
+        [
+          {
+            "node": "AI enrichment (Flowise)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI enrichment (Flowise)": {
+      "main": [
+        [
+          {
+            "node": "Bygg kontext + AI-svar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bygg kontext + AI-svar": {
+      "main": [
+        [
+          {
+            "node": "Klassificera intent (lead/support)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Klassificera intent (lead/support)": {
+      "main": [
+        [
+          {
+            "node": "Send to CRM — skapa person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to CRM — skapa person": {
+      "main": [
+        [
+          {
+            "node": "Läs ut personId",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Om duplicated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Läs ut personId": {
+      "main": [
+        [
+          {
+            "node": "Send to CRM — skapa affär",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to CRM — skapa affär": {
+      "main": [
+        [
+          {
+            "node": "Svara webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Om duplicated": {
+      "main": [
+        [
+          {
+            "node": "CRM — Hämta person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM — Hämta person": {
+      "main": [
+        [
+          {
+            "node": "Läs ut personId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "15e76b0e-bedb-42e5-97c3-6c0c3034c493",
+  "meta": {
+    "instanceId": "d5d71a81dbf2b9339542f9bc22be2f1f02156784e9ef777a0752265fc23cd1b5"
+  },
+  "id": "u9RILFzUk8V23aXH",
+  "tags": []
+}

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import ChatwootWidget from "./ChatwootWidget.jsx";
 
 const N8N_BASE = "http://localhost:5678";
 const BASIC_USER = "admin";
@@ -198,8 +199,13 @@ export default function App() {
     }
   };
 
+  const chatwootConfigured =
+    Boolean(import.meta.env.VITE_CHATWOOT_BASE_URL) &&
+    Boolean(import.meta.env.VITE_CHATWOOT_WEBSITE_TOKEN);
+
   return (
     <div className="page">
+      <ChatwootWidget />
       <header className="hero">
         <p className="eyebrow">BOSSES AKVARIEFISKAR · REACT SHOP DEMO</p>
         <h1>Död fisk, tidsmaskiner och ett CRM-flöde som faktiskt är begripligt</h1>
@@ -293,9 +299,19 @@ export default function App() {
         <article className="panel">
           <h3>Support / Chatwoot-liknande frågor</h3>
           <p className="panel-intro">
-            Kortare meddelanden här är bra för att testa supporttriage, kategorisering och när
-            någon bör skickas vidare till människa.
+            Formuläret nedan skickar direkt till n8n <code>/webhook/support</code> (samma AI-steg som
+            labbet, men <strong>inte</strong> via Chatwoot). För riktig chatt mot Chatwoot: skapa en
+            <strong> Website</strong>-inbox i Chatwoot, kopiera <em>website token</em>, sätt{" "}
+            <code>VITE_CHATWOOT_BASE_URL</code> (t.ex. <code>http://localhost:3001</code>) och{" "}
+            <code>VITE_CHATWOOT_WEBSITE_TOKEN</code> i miljön och starta om React-demon — då visas
+            Chatwoots widget här. Koppla sedan Chatwoots webhook till n8n enligt README.
           </p>
+          {!chatwootConfigured && (
+            <p className="panel-hint">
+              Widget ej aktiv: lägg till Vite-variablerna ovan (se <code>demo-react/.env.example</code>
+              ).
+            </p>
+          )}
           <div className="example-buttons" aria-label="Supportexempel">
             {supportExamples.map((example) => (
               <button

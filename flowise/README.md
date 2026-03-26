@@ -19,6 +19,22 @@ Det enklaste för labbet är att skicka in OpenAI-nyckeln som miljövariabel til
 
 > **Obs:** Utan nyckel kan du fortfarande köra hela kedjan, men AI-svar blir tomma eller fel tills nyckeln finns.
 
+## 1b. LangSmith (observabilitet) — valfritt
+
+Flowise använder LangChain under huven. Med **LangSmith** kan du i molnet se spår för varje körning (prompt, kedja, fel, ungefärlig latens), vilket är användbart i labb och felsökning.
+
+1. Skapa konto på [LangSmith](https://smith.langchain.com) och skapa en **API-nyckel**.
+2. I projektets `.env` (kopiera från `.env.example`):
+   - `LANGCHAIN_TRACING_V2=true`
+   - `LANGCHAIN_API_KEY=din-nyckel`
+   - valfritt: `LANGCHAIN_PROJECT=ett-namn-som-grupperar-spar-i-UI`
+3. Starta om Flowise: `docker compose up -d flowise`.
+4. Kör ett anrop (t.ex. via n8n-webhook eller `curl` mot prediction-API). Öppna LangSmith och välj ditt projekt — nya körningar ska synas där.
+
+**Av:** Sätt `LANGCHAIN_TRACING_V2=false` eller lämna `LANGCHAIN_API_KEY` tom så skickas inget till LangSmith. Nyckeln ska aldrig committas (`.env` är ignorerad).
+
+Miljövariablerna sätts i rotens `docker-compose.yml` för tjänsten `flowise`. Svensk kortguide finns också på projektportalen `http://localhost:8084`.
+
 ## 2. Skapa en enkel Chatflow
 
 1. Öppna **http://localhost:3000**  

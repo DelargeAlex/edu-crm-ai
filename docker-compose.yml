@@ -13,6 +13,10 @@ services:
     image: node:22-alpine
     working_dir: /app
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 8081"
+    environment:
+      # Chatwoot website widget (webbläsaren laddar SDK från denna URL — använd localhost, inte chatwoot-rails)
+      VITE_CHATWOOT_BASE_URL: ${VITE_CHATWOOT_BASE_URL:-}
+      VITE_CHATWOOT_WEBSITE_TOKEN: ${VITE_CHATWOOT_WEBSITE_TOKEN:-}
     volumes:
       - ./demo-react:/app
     ports:
@@ -69,6 +73,11 @@ services:
       PORT: 3000
       # Optional: set your key for real AI answers in Flowise
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # LangSmith (LangChain tracing) — see portal / slides index and flowise/README.md
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-bosses-akvariefiskar}
+      LANGCHAIN_ENDPOINT: ${LANGCHAIN_ENDPOINT:-https://eu.api.smith.langchain.com}
     volumes:
       - ./flowise/.flowise:/root/.flowise
     restart: unless-stopped
@@ -107,6 +116,9 @@ services:
       SMTP_AUTHENTICATION: none
     entrypoint: docker/entrypoints/rails.sh
     command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    # Så Chatwoot-UI kan spara webhooks till en "riktig" domän (host.docker.internal) som når n8n via värdens port 5678
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   chatwoot-sidekiq:
@@ -132,6 +144,8 @@ services:
       POSTGRES_DATABASE: chatwoot_production
     entrypoint: docker/entrypoints/rails.sh
     command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   chatwoot-postgres:

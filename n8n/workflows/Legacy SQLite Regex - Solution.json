@@ -1,0 +1,200 @@
+{
+  "name": "Legacy SQLite Regex - Solution",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## End-to-end solution\n\nÖppna webhooken direkt i webbläsaren:\n\n- `/webhook/legacy-sqlite-solution`\n- `/webhook/legacy-sqlite-solution?submissionId=3`\n\nWorkflowet hämtar en rad från legacy-SQLite via den fula tjänsten, regex-parsar blobben och svarar med HTML.",
+        "height": 240,
+        "width": 360,
+        "color": 4
+      },
+      "id": "6a161d56-9e32-4ffe-ad9f-27c23f61db46",
+      "name": "Anteckning: solution",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "path": "legacy-sqlite-solution",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e1e7e802-68b5-4a8a-b424-dea8aaef1afb",
+      "name": "Webhook: legacy sqlite solution",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        176
+      ],
+      "webhookId": "legacy-sqlite-solution-demo"
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = items[0].json;\nconst query = root.query || {};\nconst body = root.body || {};\nconst submissionId = String(query.submissionId ?? body.submissionId ?? 'latest').trim() || 'latest';\nitems[0].json = { submissionId };\nreturn items;"
+      },
+      "id": "e86829f4-1134-4f42-acec-358ebcba5f41",
+      "name": "Läs submissionId",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://legacy-ugly-web:8086/api/submissions/{{$json.submissionId}}",
+        "options": {}
+      },
+      "id": "ba879715-eb74-49b8-a07b-bd69c081dd02",
+      "name": "Hämta legacy-rad",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        432,
+        176
+      ],
+      "notesInFlow": true,
+      "notes": "Använder /api/submissions/latest eller /api/submissions/{id}. Källan är fortfarande SQLite, men läses via legacy-tjänsten för att workflowet ska vara stabilt i kursmiljön."
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "2ed291fc-a304-4230-ba8b-cf1cd273c338",
+      "name": "Svara med HTML",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "html": "\n<!doctype html>\n<html lang=\\\"sv\\\">\n  <head>\n    <meta charset=\\\"utf-8\\\" />\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\" />\n    <title>Legacy SQLite regex solution</title>\n    <style>\n      :root {\n        --bg: #09111c;\n        --panel: #14253d;\n        --card: #1a3251;\n        --text: #edf7ff;\n        --muted: #a8c1d6;\n        --accent: #7ce8ca;\n        --accent2: #ffc976;\n      }\n      * { box-sizing: border-box; }\n      body {\n        margin: 0;\n        font-family: \\\"Segoe UI\\\", sans-serif;\n        color: var(--text);\n        background:\n          radial-gradient(980px 520px at 12% 0%, rgba(124, 232, 202, 0.16), transparent 48%),\n          radial-gradient(860px 420px at 92% 10%, rgba(255, 201, 118, 0.16), transparent 44%),\n          linear-gradient(180deg, #08111c, #0e1827);\n      }\n      main {\n        max-width: 1040px;\n        margin: 0 auto;\n        padding: 2rem 1.15rem 3rem;\n      }\n      .hero, .panel {\n        border-radius: 20px;\n        padding: 1rem 1.1rem 1.2rem;\n        background: linear-gradient(180deg, rgba(26, 50, 81, 0.96), rgba(20, 37, 61, 0.96));\n        border: 1px solid rgba(255, 255, 255, 0.08);\n      }\n      .hero h1 { margin: 0 0 0.4rem; font-size: clamp(1.8rem, 3vw, 2.5rem); }\n      .hero p, .tiny { color: var(--muted); }\n      .pill {\n        display: inline-block;\n        margin-bottom: 0.75rem;\n        padding: 0.28rem 0.62rem;\n        border-radius: 999px;\n        background: rgba(124, 232, 202, 0.12);\n        color: var(--accent);\n        font-size: 0.82rem;\n        letter-spacing: 0.05em;\n        text-transform: uppercase;\n      }\n      .grid {\n        display: grid;\n        grid-template-columns: 1.08fr 0.92fr;\n        gap: 1rem;\n        margin-top: 1rem;\n      }\n      table {\n        width: 100%;\n        border-collapse: collapse;\n      }\n      th, td {\n        padding: 0.65rem 0.72rem;\n        border-bottom: 1px solid rgba(255, 255, 255, 0.08);\n        text-align: left;\n        vertical-align: top;\n      }\n      th { width: 32%; color: var(--accent2); font-weight: 700; }\n      .reward-card {\n        display: grid;\n        gap: 0.95rem;\n      }\n      .reward-card img {\n        width: 100%;\n        max-width: 300px;\n        aspect-ratio: 1 / 1;\n        object-fit: cover;\n        border-radius: 18px;\n        border: 1px solid rgba(255, 255, 255, 0.1);\n        background: rgba(255, 255, 255, 0.04);\n      }\n      .reward-empty {\n        min-height: 220px;\n        place-items: center;\n      }\n      details { margin-top: 1rem; }\n      pre {\n        overflow: auto;\n        white-space: pre-wrap;\n        padding: 0.8rem;\n        border-radius: 12px;\n        background: rgba(0, 0, 0, 0.28);\n        border: 1px solid rgba(255, 255, 255, 0.08);\n      }\n      code {\n        font-family: ui-monospace, monospace;\n        background: rgba(255, 255, 255, 0.06);\n        border-radius: 6px;\n        padding: 0.1rem 0.3rem;\n      }\n      @media (max-width: 860px) {\n        .grid { grid-template-columns: 1fr; }\n      }\n    </style>\n  </head>\n  <body>\n    <main>\n      <section class=\\\"hero\\\">\n        <span class=\\\"pill\\\">End-to-end solution</span>\n        <h1>Legacy SQLite -> regex -> struktur -> preview</h1>\n        <p>Detta workflow visar hela kedjan: hämta en blob från SQLite-vägen, regex-parsa ut riktiga fält och visa resultatet direkt som HTML i webbläsaren.</p>\n      </section>\n      <section class=\\\"grid\\\">\n        <article class=\\\"panel\\\">\n          <h2>Uppstrukturerade fält</h2>\n          <table>{{ $json.tableRows }}</table>\n        {{ $json.rawBlock }}\n        </article>\n        <aside class=\\\"panel\\\">\n       {{ $json.imageBlock }}\n          <p class=\\\"tiny\\\">Vill du i stället posta strukturerad JSON till en separat final webhook? Använd <code>/webhook/legacy-reward-preview</code>.</p>\n          <pre>{{ $json.rewardExample }}</pre>\n        </aside>\n      </section>\n    </main>\n  </body>\n</html>`"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1056,
+        -48
+      ],
+      "id": "74fbe581-e99a-474b-89bb-89fd56e4a68a",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = items[0].json;\nconst rawBlob = String(row.raw_blob ?? row.rawBlob ?? '');\nconst pick = (label) => {\n  const escaped = label.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n  const match = rawBlob.match(new RegExp(`${escaped}=([^|]+)`, 'i'));\n  return match ? match[1].trim() : '';\n};\nconst parsed = {\n  submissionId: row.id ?? '',\n  company: row.company ?? 'Kjells Konserverade Koi',\n  createdAt: row.created_at ?? row.createdAt ?? '',\n  rawBlob,\n  name: pick('namn'),\n  email: pick('email'),\n  phone: pick('telefon'),\n  product: pick('produkt'),\n  quantity: pick('antal'),\n  city: pick('stad'),\n  channel: pick('kanal'),\n  issue: pick('kommentar'),\n  profileUrl: pick('profileUrl'),\n};\n\n\n\nitems[0].json = parsed;\nreturn items;"
+      },
+      "id": "a11e4a02-bc7e-43ef-8462-e866f2a00867",
+      "name": "Regex + bygg struktur",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsed = $input.first().json\nconst combined = `${parsed.product} ${parsed.issue} ${parsed.channel}`.toLowerCase();\nparsed.category = /partner|event|pr/.test(combined)\n  ? 'partnership'\n  : /dubbla|skadad|problem|fel|avslappnad|paradox/.test(combined)\n    ? 'support_case'\n    : /offert|hotell|premium|antal|present|lobby|kampanj/.test(combined)\n      ? 'bulk_order'\n      : 'general_inquiry';\n\nconst esc = (value) => String(value ?? '')\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;')\n  .replace(/\\\"/g, '&quot;');\n\nconst rows = [\n  ['Submission ID', parsed.submissionId],\n  ['Företag', parsed.company],\n  ['Skapad', parsed.createdAt],\n  ['Namn', parsed.name],\n  ['E-post', parsed.email],\n  ['Telefon', parsed.phone],\n  ['Produkt', parsed.product],\n  ['Antal', parsed.quantity],\n  ['Stad', parsed.city],\n  ['Kanal', parsed.channel],\n  ['Kategori', parsed.category],\n  ['Kommentar', parsed.issue],\n].filter(([, value]) => value);\n\nconst tableRows = rows.map(([label, value]) => `<tr><th>${esc(label)}</th><td>${esc(value)}</td></tr>`).join('');\nconst imageBlock = parsed.profileUrl\n  ? `<div class=\\\"reward-card\\\"><img src=\\\"${esc(parsed.profileUrl)}\\\" alt=\\\"Reward image\\\" /><div><h2>Regex lyckades</h2><p>Fälten är nu extraherade ur en enda blob. Nästa steg kan vara CRM, spreadsheet eller supportyta.</p></div></div>`\n  : `<div class=\\\"reward-card reward-empty\\\"><div><h2>Ingen profileUrl hittades</h2><p>Workflowet fungerade, men reward-bilden saknas eftersom blobben inte innehöll någon bild-URL.</p></div></div>`;\nconst rawBlock = `<details><summary>Visa ursprunglig blob</summary><pre>${esc(parsed.rawBlob)}</pre></details>`;\nconst rewardExample = esc(`curl -sS -X POST http://localhost:5678/webhook/legacy-reward-preview -H \\\"Content-Type: application/json\\\" -d '${JSON.stringify({\n  submissionId: parsed.submissionId,\n  company: parsed.company,\n  name: parsed.name,\n  email: parsed.email,\n  phone: parsed.phone,\n  product: parsed.product,\n  quantity: parsed.quantity,\n  city: parsed.city,\n  category: parsed.category,\n  issue: parsed.issue,\n  source: 'n8n-legacy-regex-solution',\n  profileUrl: parsed.profileUrl,\n  rawBlob: parsed.rawBlob,\n}).replace(/'/g, \"'\\\\''\")}'`);\n\nreturn {\n  rawBlock,\n  rewardExample,\n  imageBlock,\n  tableRows\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -48
+      ],
+      "id": "61b2ebb9-45a6-4d9b-9781-24ce9ba1e981",
+      "name": "bygg dynamisk html data"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook: legacy sqlite solution": {
+      "main": [
+        [
+          {
+            "node": "Läs submissionId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Läs submissionId": {
+      "main": [
+        [
+          {
+            "node": "Hämta legacy-rad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hämta legacy-rad": {
+      "main": [
+        [
+          {
+            "node": "Regex + bygg struktur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Svara med HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Regex + bygg struktur": {
+      "main": [
+        [
+          {
+            "node": "bygg dynamisk html data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bygg dynamisk html data": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "18a15330-f3ef-49f4-97c0-b1a8dabb1c91",
+  "meta": {
+    "instanceId": "d5d71a81dbf2b9339542f9bc22be2f1f02156784e9ef777a0752265fc23cd1b5"
+  },
+  "id": "AB7qVeBXgf8kP4II",
+  "tags": []
+}

@@ -644,7 +644,7 @@ Browser -> localhost:3000</pre>
               <li>n8n anropar Flowise via <code>http://flowise:3000</code>.</li>
               <li>n8n anropar Twenty via <code>http://twenty:3000</code>.</li>
               <li>n8n anropar Chatwoot API via <code>http://chatwoot-rails:3000</code>.</li>
-              <li>Chatwoot ska anropa n8n via <code>http://n8n:5678/webhook/chatwoot</code>.</li>
+              <li>Chatwoot ska anropa n8n via webhook. I UI: ofta <code>http://host.docker.internal:5678/webhook/chatwoot</code> (accepteras som giltig URL). Internt i Docker: <code>http://n8n:5678/webhook/chatwoot</code>.</li>
             </ul>
             <pre class="flow">Container -> flowise:3000
 Container -> twenty:3000
@@ -730,7 +730,7 @@ Container -> n8n:5678</pre>
             <h3>Chatwoot</h3>
             <ul>
               <li>För svar tillbaka till chatten behövs <code>CHATWOOT_API_ACCESS_TOKEN</code>.</li>
-              <li>Webhook från Chatwoot till n8n ska använda <code>http://n8n:5678/webhook/chatwoot</code>.</li>
+              <li>Webhook till n8n: <code>http://host.docker.internal:5678/webhook/chatwoot</code> i Chatwoot-formulär, eller <code>http://n8n:5678/webhook/chatwoot</code> om UI tillåter det.</li>
             </ul>
           </div>
         </div>

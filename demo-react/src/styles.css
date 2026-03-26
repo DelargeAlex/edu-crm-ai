@@ -177,6 +177,15 @@ body {
   font-size: 0.92rem;
 }
 
+.panel-hint {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px dashed rgba(114, 230, 209, 0.35);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 label {
   display: grid;
   gap: 0.3rem;

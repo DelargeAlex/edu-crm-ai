@@ -157,6 +157,22 @@
       </section>
 
       <section class="section">
+        <h2>Observabilitet med LangSmith</h2>
+        <p class="small">
+          Flowise bygger på LangChain. När du aktiverar <strong>LangSmith</strong> skickas spår (prompts, kedjor, latens) till LangSmith så att du kan felsöka och jämföra körningar i undervisningen.
+        </p>
+        <ol class="linklist" style="margin-top: 0.5rem;">
+          <li>Skapa konto på <a href="https://smith.langchain.com" target="_blank" rel="noreferrer">smith.langchain.com</a> och skapa en <strong>API-nyckel</strong>.</li>
+          <li>I projektets <code>.env</code>: sätt <code>LANGCHAIN_TRACING_V2=true</code>, klistra in <code>LANGCHAIN_API_KEY=…</code> och valfritt <code>LANGCHAIN_PROJECT=</code> (projektnamn i LangSmith).</li>
+          <li>Starta om Flowise: <code>docker compose up -d flowise</code>.</li>
+          <li>Kör ett lead eller support-flöde via n8n eller prediction-API — spåren dyker upp under ditt projekt i LangSmith.</li>
+        </ol>
+        <p class="small" style="margin-top: 0.6rem;">
+          Utan nyckel eller med <code>LANGCHAIN_TRACING_V2=false</code> skickas inget till molnet. Lämna alltid nyckeln i <code>.env</code> (den är redan ignorerad av git).
+        </p>
+      </section>
+
+      <section class="section">
         <h2>Case och uppgifter</h2>
         <ul class="linklist">
           <li><a href="/legacy-case/README.md" target="_blank" rel="noreferrer">Legacy Freetext Case README</a></li>

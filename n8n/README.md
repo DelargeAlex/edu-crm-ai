@@ -11,7 +11,7 @@ Importera i n8n (**Workflows → Import from File**) och **aktivera** varje flö
 | [workflows/legacy-reward-preview.json](workflows/legacy-reward-preview.json) | `/webhook/legacy-reward-preview` | Tar emot strukturerad JSON och svarar med HTML-preview |
 | [workflows/legacy-regex-solution.json](workflows/legacy-regex-solution.json) | `/webhook/legacy-sqlite-solution` | Komplett lösning: hämta legacy-rad → regex-parsa → HTML-preview |
 
-**Chatwoot:** se huvud-README för `CHATWOOT_API_ACCESS_TOKEN`, webhook-URL (`http://n8n:5678/webhook/chatwoot`) och loop-skydd (bara inkommande meddelanden).
+**Chatwoot:** se huvud-README för `CHATWOOT_API_ACCESS_TOKEN`. Webhook-URL: föredra `http://host.docker.internal:5678/webhook/chatwoot` i Chatwoot-UI (om `http://n8n:5678/...` avvisas som ogiltig URL). Loop-skydd: bara inkommande meddelanden.
 
 ## Legacy-case
 

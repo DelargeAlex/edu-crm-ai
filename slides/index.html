@@ -181,6 +181,35 @@
       font-size: 0.9rem;
       opacity: 0.9;
     }
+
+    .obs-callout {
+      margin-top: 1.25rem;
+      padding: 1rem 1.1rem;
+      border-radius: 14px;
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      background: rgba(15, 23, 42, 0.55);
+      text-align: left;
+      max-width: 52rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .obs-callout h2 {
+      margin: 0 0 0.45rem;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .obs-callout p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    .obs-callout a {
+      color: var(--primary);
+    }
   </style>
 </head>
 <body>
@@ -230,6 +259,18 @@
     <figure class="hero-image hero-image--bottom">
       <img src="./figures/theme_image.webp" alt="Temabild för kursens AI- och CRM-stack, nedre halva" />
     </figure>
+
+    <aside class="obs-callout" aria-label="LangSmith observabilitet">
+      <h2>Observabilitet: LangSmith</h2>
+      <p>
+        För att se kedjor, anrop och latens från Flowise (LangChain) i molnet: skapa konto på
+        <a href="https://smith.langchain.com" target="_blank" rel="noreferrer">LangSmith</a>,
+        lägg <code>LANGCHAIN_TRACING_V2=true</code> och <code>LANGCHAIN_API_KEY</code> i <code>.env</code>,
+        starta om Flowise med Docker Compose. Mer steg-för-steg finns på projektportalen
+        <code>http://localhost:8084</code> under rubriken <em>Observabilitet med LangSmith</em>.
+        Utan nyckel skickas inget till LangSmith.
+      </p>
+    </aside>
 
     <p class="footer">Presentationsindex för kursens två steg plus en praktisk guide till dockermiljön.</p>
   </main>

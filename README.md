@@ -35,11 +35,11 @@ flowchart LR
 | Service | URL | Role |
 |--------|-----|------|
 | **n8n** | http://localhost:5678 (`admin` / `admin`) | Orchestration: webhooks, branching, HTTP to Flowise & Twenty |
-| **Flowise** | http://localhost:3000 | AI layer (OpenAI via env or UI credentials) |
+| **Flowise** | http://localhost:3000 | AI layer (OpenAI via env or UI credentials; optional LangSmith tracing via `LANGCHAIN_*` env) |
 | **Chatwoot** | http://localhost:3001 | Open-source support / chat inbox (Postgres + Redis) |
 | **Twenty** | http://localhost:3002 | Open-source CRM (Postgres + Redis) |
 | **Projektportal** | http://localhost:8084 | Svensk startsida med länkar, status och presentationer |
-| **React Demo Store** | http://localhost:8083 | Bosses Akvariefiskar storefront posting leads/support to n8n |
+| **React Demo Store** | http://localhost:8083 | Bosses storefront; leads/support forms post to n8n. Optional **Chatwoot website widget** via `VITE_CHATWOOT_BASE_URL` + `VITE_CHATWOOT_WEBSITE_TOKEN` (see `demo-react/.env.example`) |
 | **Legacy Freetext Case** | http://localhost:8085 | Ugly website + SQLite blob storage for regex/dataprocessing exercise |
 
 ## How to run
@@ -66,6 +66,7 @@ Then start (or restart) the stack as usual.
    The workflows fall back to `FLOWISE_CHATFLOW_ID`, but separate ids are recommended. See [flowise/README.md](flowise/README.md).
 2. **Twenty** — sign in, create an **API key** (Settings → APIs & Webhooks). Put the token in `TWENTY_API_KEY` for the `n8n` service, then restart n8n. If REST payloads for `people` / `opportunities` differ for your workspace/version, adjust the **HTTP Request** bodies in the imported workflows using Twenty’s **API playground**.
 3. **OpenAI (optional)** — `export OPENAI_API_KEY=sk-...` on the host before `docker compose up`, or configure credentials inside Flowise.
+4. **LangSmith (optional observability)** — set `LANGCHAIN_TRACING_V2=true` and `LANGCHAIN_API_KEY` in `.env` for the **Flowise** container (see [flowise/README.md](flowise/README.md) and the project portal). Traces appear at [smith.langchain.com](https://smith.langchain.com).
 
 ### Import n8n workflows
 
@@ -77,7 +78,7 @@ Production webhook paths (with default `WEBHOOK_URL`):
 
 - Lead: `http://localhost:5678/webhook/lead`
 - Support: `http://localhost:5678/webhook/support`
-- Chatwoot (from Chatwoot server → n8n): `http://n8n:5678/webhook/chatwoot` (see below — **not** `localhost` from inside Docker)
+- Chatwoot (from Chatwoot server → n8n): `http://host.docker.internal:5678/webhook/chatwoot` (recommended in Chatwoot UI; requires `extra_hosts` in compose). Inside Docker you can also use `http://n8n:5678/webhook/chatwoot`, but some Chatwoot forms reject that URL as “invalid”.
 - Legacy reward preview: `http://localhost:5678/webhook/legacy-reward-preview`
 - Legacy regex solution (open in browser): `http://localhost:5678/webhook/legacy-sqlite-solution`
 
@@ -86,8 +87,9 @@ Production webhook paths (with default `WEBHOOK_URL`):
 1. Complete Chatwoot setup (signup, inbox, start a conversation from the widget or UI).
 2. In Chatwoot, open **Profile → Access Token** and copy the token. Put it in `CHATWOOT_API_ACCESS_TOKEN` under the `n8n` service in `docker-compose.yml`, then `docker compose up -d n8n`.
 3. In Chatwoot, add an **outgoing webhook** (location varies by version; often **Settings → Integrations → Webhooks**) pointing to:
-   - `http://n8n:5678/webhook/chatwoot`  
-   Use the **Docker service name** `n8n` so the Chatwoot container can reach n8n on the Compose network. Subscribe to **`message_created`** (or equivalent).
+   - **`http://host.docker.internal:5678/webhook/chatwoot`** (saves correctly in most UIs; reaches n8n via the host-mapped port; `extra_hosts` is set in `docker-compose.yml` for Chatwoot).  
+   - If your UI accepts it, **`http://n8n:5678/webhook/chatwoot`** also works from containers on the Compose network.  
+   Subscribe to **`message_created`** (or equivalent).
 4. Use the **support triage** Flowise import ([flowise/import/support-triage-chatflow.json](flowise/import/support-triage-chatflow.json)) for `FLOWISE_SUPPORT_CHATFLOW_ID`, or set a dedicated `FLOWISE_CHATWOOT_CHATFLOW_ID` if chat support should have a slightly different tone or escalation policy.
 5. The workflow **only replies to incoming customer messages** (`message_type: 0`) so your **outgoing** bot reply does not re-trigger the webhook (loop prevention).
 
@@ -170,11 +172,11 @@ flowchart LR
 | Tjänst | URL | Roll |
 |--------|-----|------|
 | **n8n** | http://localhost:5678 (`admin` / `admin`) | **Orkestrering**: webhookar, villkor, anrop till Flowise och Twenty |
-| **Flowise** | http://localhost:3000 | **AI** (t.ex. OpenAI via miljövariabel eller credentials) |
+| **Flowise** | http://localhost:3000 | **AI** (OpenAI via miljö/credentials; valfri LangSmith-spårning via `LANGCHAIN_*`) |
 | **Chatwoot** | http://localhost:3001 | **Kundsupport/chatt** (öppen källkod; Postgres + Redis) |
 | **Twenty** | http://localhost:3002 | **CRM** för **lead / kontakt** och affärer (öppen källkod) |
 | **Projektportal** | http://localhost:8084 | Svensk startsida med status, länkar och presentationer |
-| **React Demo Store** | http://localhost:8083 | Bosses Akvariefiskar med roliga produkter som postar till n8n |
+| **React Demo Store** | http://localhost:8083 | Bosses-butik; formulär till n8n. Valfri **Chatwoot-widget** med `VITE_CHATWOOT_*` (se `demo-react/.env.example`) |
 | **Legacy Freetext Case** | http://localhost:8085 | Ful hemsida med SQLite-blobbar för regex- och dataprocesseringsövning |
 
 ## Hur man kör
@@ -198,6 +200,7 @@ docker compose run --rm chatwoot-rails bundle exec rails db:chatwoot_prepare
    Arbetsflödena faller tillbaka till `FLOWISE_CHATFLOW_ID`, men separata id:n rekommenderas för tydligare kategorisering. Se [flowise/README.md](flowise/README.md).
 2. **Twenty** — skapa **API-nyckel** (Inställningar → APIs & Webhooks). Sätt `TWENTY_API_KEY` för `n8n` och starta om. Om `/rest/people` eller `/rest/opportunities` skiljer sig åt i er version, justera noderna i n8n med hjälp av Twenty:s **API Playground**.
 3. **OpenAI (valfritt)** — `export OPENAI_API_KEY=sk-...` före `docker compose up`, eller konfigurera i Flowise.
+4. **LangSmith (valfri observabilitet)** — sätt `LANGCHAIN_TRACING_V2=true` och `LANGCHAIN_API_KEY` i `.env` för **Flowise** (se [flowise/README.md](flowise/README.md) och projektportalen). Spår visas i [LangSmith](https://smith.langchain.com).
 
 Importera arbetsflöden i n8n från [n8n/workflows/lead.json](n8n/workflows/lead.json), [n8n/workflows/support.json](n8n/workflows/support.json), [n8n/workflows/chatwoot.json](n8n/workflows/chatwoot.json), [n8n/workflows/legacy-regex-starter.json](n8n/workflows/legacy-regex-starter.json), [n8n/workflows/legacy-reward-preview.json](n8n/workflows/legacy-reward-preview.json) och [n8n/workflows/legacy-regex-solution.json](n8n/workflows/legacy-regex-solution.json) och **aktivera** dem.
 
@@ -213,7 +216,7 @@ Tidigare var Chatwoot mest en **egen tjänst** i stacken (supportytan bredvid CR
 
 1. Skapa konto/inbox i Chatwoot och hämta **Access token** under profil.
 2. Lägg token i `CHATWOOT_API_ACCESS_TOKEN` för tjänsten `n8n` i `docker-compose.yml` och starta om n8n.
-3. I Chatwoot, lägg till **webhook** mot `http://n8n:5678/webhook/chatwoot` (använd **`n8n` som värdnamn**, inte `localhost`, så Chatwoot-containern når n8n på Docker-nätverket). Prenumerera på **`message_created`**.
+3. I Chatwoot, lägg till **webhook**. Om formuläret klagar på *invalid URL* för `http://n8n:...`, använd **`http://host.docker.internal:5678/webhook/chatwoot`** (finns `extra_hosts` i compose). Annars fungerar `http://n8n:5678/webhook/chatwoot` från containern. Prenumerera på **`message_created`**.
 4. Flödet svarar bara på **inkommande** kundmeddelanden (`message_type: 0`) så utgående botsvar inte loopar.
 
 Se den engelska sektionen **Chatwoot ↔ n8n** ovan för `curl`-test och detaljer.
