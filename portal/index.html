@@ -83,7 +83,7 @@
       </p>
 
       <section class="grid services" aria-label="Tjänster">
-        <article class="card" data-url="http://localhost:5678">
+        <article class="card" data-url="/health/n8n">
           <div class="row">
             <h3>n8n</h3>
             <span class="status">Kontrollerar...</span>
@@ -92,7 +92,7 @@
           <a href="http://localhost:5678" target="_blank" rel="noreferrer">Öppna n8n</a>
         </article>
 
-        <article class="card" data-url="http://localhost:3000">
+        <article class="card" data-url="/health/flowise">
           <div class="row">
             <h3>Flowise</h3>
             <span class="status">Kontrollerar...</span>
@@ -101,7 +101,7 @@
           <a href="http://localhost:3000" target="_blank" rel="noreferrer">Öppna Flowise</a>
         </article>
 
-        <article class="card" data-url="http://localhost:3001">
+        <article class="card" data-url="/health/chatwoot">
           <div class="row">
             <h3>Chatwoot</h3>
             <span class="status">Kontrollerar...</span>
@@ -110,7 +110,7 @@
           <a href="http://localhost:3001" target="_blank" rel="noreferrer">Öppna Chatwoot</a>
         </article>
 
-        <article class="card" data-url="http://localhost:3002">
+        <article class="card" data-url="/health/twenty">
           <div class="row">
             <h3>Twenty CRM</h3>
             <span class="status">Kontrollerar...</span>
@@ -119,7 +119,7 @@
           <a href="http://localhost:3002" target="_blank" rel="noreferrer">Öppna Twenty</a>
         </article>
 
-        <article class="card" data-url="http://localhost:8083">
+        <article class="card" data-url="/health/demo-web">
           <div class="row">
             <h3>React Demo Store</h3>
             <span class="status">Kontrollerar...</span>
@@ -128,7 +128,7 @@
           <a href="http://localhost:8083" target="_blank" rel="noreferrer">Öppna React-appen</a>
         </article>
 
-        <article class="card" data-url="http://localhost:8085">
+        <article class="card" data-url="/health/legacy">
           <div class="row">
             <h3>Legacy Freetext Case</h3>
             <span class="status">Kontrollerar...</span>
@@ -192,10 +192,10 @@
             ctrl.abort();
             resolve(false);
           }, timeoutMs);
-          fetch(url, { mode: "no-cors", signal: ctrl.signal })
-            .then(() => {
+          fetch(url, { signal: ctrl.signal, cache: "no-store" })
+            .then((response) => {
               clearTimeout(timeout);
-              resolve(true);
+              resolve(response.status > 0 && response.status < 500);
             })
             .catch(() => {
               clearTimeout(timeout);

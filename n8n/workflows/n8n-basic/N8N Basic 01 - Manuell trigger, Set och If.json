@@ -1,0 +1,251 @@
+{
+  "name": "N8N Basic 01 - Manuell trigger, Set och If",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 1: n8n-grunder\n\nDet här första flödet visar den enklaste arbetsformen i n8n:\n\n1. Starta manuellt\n2. Skapa data med `Set`\n3. Gör ett enkelt vägval med `If`\n\nFlödet visar hur data läses in, bearbetas och skickas vidare.",
+        "height": 260,
+        "width": 360,
+        "color": 5
+      },
+      "id": "sticky-intro-01",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger-01",
+      "name": "When clicking 'Execute workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "firstName",
+              "value": "Nina",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "company",
+              "value": "Norrsken Hotell",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "interest",
+              "value": "Zombie Guppy Deluxe",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "wantsFollowUp",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "a5",
+              "name": "message",
+              "value": "Vi vill ha pris för 12 akvarier till hotellets reception.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-example-01",
+      "name": "Skapa exempellead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Vad `Set` gör\n\n`Set` används ofta tidigt i flöden för att:\n\n- skapa testdata\n- döpa om fält\n- normalisera input\n- förbereda data inför nästa nod",
+        "height": 220,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-set-01",
+      "name": "Anteckning: set",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-followup",
+              "leftValue": "={{ $json.wantsFollowUp }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-followup-01",
+      "name": "Ska sälj följa upp?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t1",
+              "name": "priority",
+              "value": "Hög",
+              "type": "string"
+            },
+            {
+              "id": "t2",
+              "name": "nextStep",
+              "value": "Ring upp leadet samma dag",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-high-priority-01",
+      "name": "Sätt hög prioritet",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        760,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "priority",
+              "value": "Låg",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "nextStep",
+              "value": "Lägg i lista för senare uppföljning",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-low-priority-01",
+      "name": "Sätt låg prioritet",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        760,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Vad `If` gör\n\nDen här noden visar en viktig del av många workflow:\n\n- samma data kommer in\n- olika grenar kan skapas\n- nästa steg beror på ett villkor",
+        "height": 210,
+        "width": 300,
+        "color": 6
+      },
+      "id": "sticky-if-01",
+      "name": "Anteckning: if",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        440,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "Skapa exempellead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skapa exempellead": {
+      "main": [
+        [
+          {
+            "node": "Ska sälj följa upp?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ska sälj följa upp?": {
+      "main": [
+        [
+          {
+            "node": "Sätt hög prioritet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sätt låg prioritet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

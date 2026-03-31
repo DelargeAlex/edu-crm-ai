@@ -1,0 +1,491 @@
+{
+  "name": "N8N Basic 05 - Lead routing till salj, support eller partner",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 5: ett mer verkligt lead-spår\n\nHär används samma lead-idé men med fler vägar.\n\nFlödet visar hur n8n kan routa olika typer av inkommande meddelanden till olika team utan någon kodnod.",
+        "height": 230,
+        "width": 360,
+        "color": 5
+      },
+      "id": "sticky-intro-05",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-basic-route",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-route-05",
+      "name": "Webhook: lead route",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        420
+      ],
+      "webhookId": "lead-basic-route-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "e2",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "e3",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-lead-05",
+      "name": "Normalisera lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "support-route",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "problem",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-support-05",
+      "name": "Ser ut som support?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sp1",
+              "name": "route",
+              "value": "support",
+              "type": "string"
+            },
+            {
+              "id": "sp2",
+              "name": "system",
+              "value": "Chatwoot",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-support-05",
+      "name": "Skicka mot supportsparet",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        760,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "sales-route",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "offert",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-sales-05",
+      "name": "Ser ut som offert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        760,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sa1",
+              "name": "route",
+              "value": "sales",
+              "type": "string"
+            },
+            {
+              "id": "sa2",
+              "name": "system",
+              "value": "Twenty CRM",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-sales-05",
+      "name": "Skicka mot saljsparet",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1020,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "partner-route",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "partner",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-partner-05",
+      "name": "Ser ut som partner eller PR?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pa1",
+              "name": "route",
+              "value": "partnership",
+              "type": "string"
+            },
+            {
+              "id": "pa2",
+              "name": "system",
+              "value": "Manuell uppföljning",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-partner-05",
+      "name": "Skicka mot partnerspar",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ma1",
+              "name": "route",
+              "value": "manual_review",
+              "type": "string"
+            },
+            {
+              "id": "ma2",
+              "name": "system",
+              "value": "Gemensam kvalificeringsko",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-manual-05",
+      "name": "Skicka till manuell granskning",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'routed', route: $json.route, system: $json.system, email: $json.email, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "respond-support-05",
+      "name": "Svara: support",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1020,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'routed', route: $json.route, system: $json.system, email: $json.email, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "respond-sales-05",
+      "name": "Svara: sälj",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'routed', route: $json.route, system: $json.system, email: $json.email, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "respond-partner-05",
+      "name": "Svara: partner",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'routed', route: $json.route, system: $json.system, email: $json.email, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "respond-manual-05",
+      "name": "Svara: manuell granskning",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Progression mot Bosses huvudflöde\n\nDet här flödet motsvarar kärnan i ett större lead-system:\n\n- samma trigger\n- mer routing\n- olika nästa system beroende på innehåll\n\nSenare byts de enkla reglerna ut eller kompletteras med AI.",
+        "height": 240,
+        "width": 320,
+        "color": 4
+      },
+      "id": "sticky-route-05",
+      "name": "Anteckning: progression",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        520,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: lead route": {
+      "main": [
+        [
+          {
+            "node": "Normalisera lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera lead": {
+      "main": [
+        [
+          {
+            "node": "Ser ut som support?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ser ut som support?": {
+      "main": [
+        [
+          {
+            "node": "Skicka mot supportsparet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ser ut som offert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skicka mot supportsparet": {
+      "main": [
+        [
+          {
+            "node": "Svara: support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ser ut som offert?": {
+      "main": [
+        [
+          {
+            "node": "Skicka mot saljsparet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ser ut som partner eller PR?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skicka mot saljsparet": {
+      "main": [
+        [
+          {
+            "node": "Svara: sälj",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ser ut som partner eller PR?": {
+      "main": [
+        [
+          {
+            "node": "Skicka mot partnerspar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skicka till manuell granskning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skicka mot partnerspar": {
+      "main": [
+        [
+          {
+            "node": "Svara: partner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skicka till manuell granskning": {
+      "main": [
+        [
+          {
+            "node": "Svara: manuell granskning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

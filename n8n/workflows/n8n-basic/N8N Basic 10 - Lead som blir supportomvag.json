@@ -1,0 +1,279 @@
+{
+  "name": "N8N Basic 10 - Lead som blir supportomvag",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 10: lead som egentligen är support\n\nEtt vanligt verkligt problem är att ett formulär tar emot fel typ av ärende.\n\nDet här flödet visar hur n8n kan:\n1. ta emot ett lead\n2. upptäcka att det egentligen är en supportfråga\n3. skicka vidare ärendet till ett annat workflow",
+        "height": 270,
+        "width": 400,
+        "color": 5
+      },
+      "id": "sticky-intro-10",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-support-reroute-basic",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-10",
+      "name": "Webhook: lead med omvag",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        420
+      ],
+      "webhookId": "lead-support-reroute-basic-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-10",
+      "name": "Normalisera lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "support-check-10",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "problem",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-10",
+      "name": "Ar detta egentligen support?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        520,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://n8n:5678/webhook/support-flowise-basic",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customerName: $json.name, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "http-support-10",
+      "name": "Skicka vidare till supportworkflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'rerouted_to_support', supportReply: $('Skicka vidare till supportworkflow').first().json.reply || $('Skicka vidare till supportworkflow').first().json.data?.reply || $('Skicka vidare till supportworkflow').first().json.text || null }) }}",
+        "options": {}
+      },
+      "id": "respond-support-10",
+      "name": "Svara: skickad till support",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1",
+              "name": "route",
+              "value": "sales",
+              "type": "string"
+            },
+            {
+              "id": "d2",
+              "name": "nextStep",
+              "value": "Fortsatt kvalificering som lead",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-sales-10",
+      "name": "Behall i leadsparet",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'kept_as_lead', route: $json.route, nextStep: $json.nextStep, message: $('Normalisera lead').first().json.message }) }}",
+        "options": {}
+      },
+      "id": "respond-sales-10",
+      "name": "Svara: fortsatt lead",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Workflow till workflow\n\nDet här visar att ett workflow inte bara behöver vara en rak kedja.\n\nI riktiga lösningar skickar n8n ofta vidare ärenden mellan olika delworkflow beroende på vad som kommer in.",
+        "height": 220,
+        "width": 320,
+        "color": 4
+      },
+      "id": "sticky-10",
+      "name": "Anteckning: workflow till workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        760,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: lead med omvag": {
+      "main": [
+        [
+          {
+            "node": "Normalisera lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera lead": {
+      "main": [
+        [
+          {
+            "node": "Ar detta egentligen support?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ar detta egentligen support?": {
+      "main": [
+        [
+          {
+            "node": "Skicka vidare till supportworkflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Behall i leadsparet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skicka vidare till supportworkflow": {
+      "main": [
+        [
+          {
+            "node": "Svara: skickad till support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Behall i leadsparet": {
+      "main": [
+        [
+          {
+            "node": "Svara: fortsatt lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

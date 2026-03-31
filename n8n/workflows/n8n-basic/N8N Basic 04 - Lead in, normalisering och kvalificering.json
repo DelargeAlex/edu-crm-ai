@@ -1,0 +1,299 @@
+{
+  "name": "N8N Basic 04 - Lead in, normalisering och kvalificering",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 4: första riktiga lead-flödet\n\nHär används samma typ av signal som i Bosses lead flow.\n\nFlödet gör tre saker:\n1. Tar emot ett lead\n2. Normaliserar fälten\n3. Avgör om det ser ut som B2B eller B2C",
+        "height": 240,
+        "width": 360,
+        "color": 5
+      },
+      "id": "sticky-intro-04",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-basic-qualify",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-lead-04",
+      "name": "Webhook: lead basic",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        360
+      ],
+      "webhookId": "lead-basic-qualify-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "d2",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "d3",
+              "name": "company",
+              "value": "={{ $json.body.company }}",
+              "type": "string"
+            },
+            {
+              "id": "d4",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "d5",
+              "name": "source",
+              "value": "lead-form",
+              "type": "string"
+            },
+            {
+              "id": "d6",
+              "name": "hasCompany",
+              "value": "={{ Boolean($json.body.company) }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-normalize-04",
+      "name": "Normalisera lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "has-company",
+              "leftValue": "={{ $json.hasCompany }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-b2b-04",
+      "name": "Finns företag angivet?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        520,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b2b1",
+              "name": "customerType",
+              "value": "B2B",
+              "type": "string"
+            },
+            {
+              "id": "b2b2",
+              "name": "nextStep",
+              "value": "Skapa affärsspår i CRM",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-b2b-04",
+      "name": "Märk som B2B-lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        780,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b2c1",
+              "name": "customerType",
+              "value": "B2C",
+              "type": "string"
+            },
+            {
+              "id": "b2c2",
+              "name": "nextStep",
+              "value": "Skicka till säljlista eller nyhetsbrev",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-b2c-04",
+      "name": "Märk som B2C-lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        780,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'qualified', name: $json.name, email: $json.email, customerType: $json.customerType, nextStep: $json.nextStep, company: $json.company || null }) }}",
+        "options": {}
+      },
+      "id": "respond-b2b-04",
+      "name": "Svara: B2B",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'qualified', name: $json.name, email: $json.email, customerType: $json.customerType, nextStep: $json.nextStep, company: $json.company || null }) }}",
+        "options": {}
+      },
+      "id": "respond-b2c-04",
+      "name": "Svara: B2C",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Enkel kvalificering\n\nI originalflödet gör AI en del av kvalificeringen.\n\nHär används i stället en enklare regel:\n\n`company finns -> sannolikt B2B`\n\nDet gör senare AI-berikning lättare att förstå.",
+        "height": 230,
+        "width": 320,
+        "color": 4
+      },
+      "id": "sticky-qualify-04",
+      "name": "Anteckning: kvalificering",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        500,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: lead basic": {
+      "main": [
+        [
+          {
+            "node": "Normalisera lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera lead": {
+      "main": [
+        [
+          {
+            "node": "Finns företag angivet?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finns företag angivet?": {
+      "main": [
+        [
+          {
+            "node": "Märk som B2B-lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Märk som B2C-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Märk som B2B-lead": {
+      "main": [
+        [
+          {
+            "node": "Svara: B2B",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Märk som B2C-lead": {
+      "main": [
+        [
+          {
+            "node": "Svara: B2C",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

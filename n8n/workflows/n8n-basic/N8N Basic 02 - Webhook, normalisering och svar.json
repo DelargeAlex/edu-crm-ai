@@ -1,0 +1,158 @@
+{
+  "name": "N8N Basic 02 - Webhook, normalisering och svar",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 2: första webhooken\n\nHär går flödet från manuell körning till att ta emot riktig HTTP-data.\n\nSteg:\n1. En klient postar JSON till webhooken\n2. `Set` plockar ut rätt fält\n3. `Respond to Webhook` skickar tillbaka ett tydligt svar",
+        "height": 250,
+        "width": 360,
+        "color": 5
+      },
+      "id": "sticky-intro-02",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "basic-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-basic-02",
+      "name": "Webhook: basic intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        320
+      ],
+      "webhookId": "basic-intake-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b2",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "b3",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "b4",
+              "name": "source",
+              "value": "webhook-demo",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-normalize-02",
+      "name": "Normalisera inkommande data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Normalisering\n\nDen här noden gör datan lättare att arbeta med i resten av flödet.\n\nI större workflow är det vanligt att göra detta direkt efter triggern.",
+        "height": 190,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-normalize-02",
+      "name": "Anteckning: normalisering",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        220,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'received', name: $json.name, email: $json.email, message: $json.message, source: $json.source }) }}",
+        "options": {}
+      },
+      "id": "respond-basic-02",
+      "name": "Svara webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        540,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Det viktiga här\n\nn8n kan här fungera som:\n\n- mottagare av data\n- bearbetare av data\n- avsändare av ett nytt svar",
+        "height": 180,
+        "width": 280,
+        "color": 6
+      },
+      "id": "sticky-respond-02",
+      "name": "Anteckning: svar",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        500,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: basic intake": {
+      "main": [
+        [
+          {
+            "node": "Normalisera inkommande data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera inkommande data": {
+      "main": [
+        [
+          {
+            "node": "Svara webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

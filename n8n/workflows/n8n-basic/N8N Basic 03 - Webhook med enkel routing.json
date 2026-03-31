@@ -1,0 +1,380 @@
+{
+  "name": "N8N Basic 03 - Webhook med enkel routing",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 3: routing med `If`\n\nNu börjar flödet likna ett riktigt ärendeflöde.\n\nHär tas ett meddelande emot och routas vidare till:\n- support\n- sälj\n- allmän kö",
+        "height": 220,
+        "width": 340,
+        "color": 5
+      },
+      "id": "sticky-intro-03",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "basic-routing",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-routing-03",
+      "name": "Webhook: basic routing",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        360
+      ],
+      "webhookId": "basic-routing-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-input-03",
+      "name": "Läs meddelande",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "support-check",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "problem",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-support-03",
+      "name": "Är det support?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s1",
+              "name": "route",
+              "value": "support",
+              "type": "string"
+            },
+            {
+              "id": "s2",
+              "name": "owner",
+              "value": "Supportteamet",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-support-03",
+      "name": "Routa till support",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        760,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "sales-check",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "offert",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-sales-03",
+      "name": "Är det offert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        760,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sa1",
+              "name": "route",
+              "value": "sales",
+              "type": "string"
+            },
+            {
+              "id": "sa2",
+              "name": "owner",
+              "value": "Säljteamet",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-sales-03",
+      "name": "Routa till sälj",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1020,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "g1",
+              "name": "route",
+              "value": "general",
+              "type": "string"
+            },
+            {
+              "id": "g2",
+              "name": "owner",
+              "value": "Gemensam inkorg",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-general-03",
+      "name": "Routa till allmän kö",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1020,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'routed', route: $json.route, owner: $json.owner, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "respond-support-03",
+      "name": "Svara: support",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1020,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'routed', route: $json.route, owner: $json.owner, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "respond-sales-03",
+      "name": "Svara: sälj",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'routed', route: $json.route, owner: $json.owner, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "respond-general-03",
+      "name": "Svara: allmän kö",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Progression\n\nDet här är samma tankemodell som senare används för lead kontra support, eller support kontra AI kontra mänsklig handläggning.\n\nSkillnaden senare är att nästa steg också kan vara ett API-anrop.",
+        "height": 210,
+        "width": 320,
+        "color": 6
+      },
+      "id": "sticky-routing-03",
+      "name": "Anteckning: routing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: basic routing": {
+      "main": [
+        [
+          {
+            "node": "Läs meddelande",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Läs meddelande": {
+      "main": [
+        [
+          {
+            "node": "Är det support?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Är det support?": {
+      "main": [
+        [
+          {
+            "node": "Routa till support",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Är det offert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routa till support": {
+      "main": [
+        [
+          {
+            "node": "Svara: support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Är det offert?": {
+      "main": [
+        [
+          {
+            "node": "Routa till sälj",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Routa till allmän kö",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routa till sälj": {
+      "main": [
+        [
+          {
+            "node": "Svara: sälj",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routa till allmän kö": {
+      "main": [
+        [
+          {
+            "node": "Svara: allmän kö",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

@@ -1,0 +1,226 @@
+{
+  "name": "N8N Basic 09 - Lead till Flowise for AI-kvalificering",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 9: AI-kvalificering av lead\n\nNu kommer AI in i lead-spåret.\n\nFlödet visar:\n1. webhook in\n2. normalisering av lead\n3. anrop till Flowise\n4. svar tillbaka med AI-sammanfattning\n\nDetta är den enklaste bro-versionen mot ett större leadflow.",
+        "height": 260,
+        "width": 390,
+        "color": 5
+      },
+      "id": "sticky-intro-09",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-flowise-basic",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-09",
+      "name": "Webhook: lead till Flowise",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ],
+      "webhookId": "lead-flowise-basic-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-09",
+      "name": "Normalisera lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://flowise:3000/api/v1/prediction/{{$env.FLOWISE_LEAD_CHATFLOW_ID || $env.FLOWISE_CHATFLOW_ID}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ question: $json.message }) }}",
+        "options": {}
+      },
+      "id": "http-09",
+      "name": "Fraga Flowise om leadet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "name",
+              "value": "={{ $('Normalisera lead').first().json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b2",
+              "name": "email",
+              "value": "={{ $('Normalisera lead').first().json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "b3",
+              "name": "message",
+              "value": "={{ $('Normalisera lead').first().json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "b4",
+              "name": "aiSummary",
+              "value": "={{ $json.text || $json.output || $json.data?.text || 'Flowise returnerade inget svar.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-ai-09",
+      "name": "Samla AI-kvalificering",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        840,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'qualified_with_ai', name: $json.name, email: $json.email, aiSummary: $json.aiSummary }) }}",
+        "options": {}
+      },
+      "id": "respond-09",
+      "name": "Svara webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Viktig poäng\n\nHär behöver inte hela AI-logiken synas i workflowet.\n\nDet viktiga är att n8n skickar en fråga till ett externt AI-lager och får tillbaka ett användbart resultat.",
+        "height": 210,
+        "width": 320,
+        "color": 4
+      },
+      "id": "sticky-09",
+      "name": "Anteckning: AI-kvalificering",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        520,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: lead till Flowise": {
+      "main": [
+        [
+          {
+            "node": "Normalisera lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera lead": {
+      "main": [
+        [
+          {
+            "node": "Fraga Flowise om leadet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fraga Flowise om leadet": {
+      "main": [
+        [
+          {
+            "node": "Samla AI-kvalificering",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Samla AI-kvalificering": {
+      "main": [
+        [
+          {
+            "node": "Svara webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

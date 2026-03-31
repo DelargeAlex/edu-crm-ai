@@ -1,0 +1,398 @@
+{
+  "name": "N8N Basic 08 - Chatwoot till Flowise till svar",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 8: bron till hela supportkedjan\n\nDet här flödet är en enkel version av ert större Chatwoot + Flowise-flöde.\n\nHär görs grunden:\n1. ta emot webhook från Chatwoot\n2. kontrollera att det är ett inkommande meddelande\n3. skicka frågan till Flowise\n4. posta AI-svaret tillbaka till Chatwoot",
+        "height": 280,
+        "width": 400,
+        "color": 5
+      },
+      "id": "sticky-intro-08",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatwoot-basic",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-chatwoot-08",
+      "name": "Webhook: Chatwoot basic",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        420
+      ],
+      "webhookId": "chatwoot-basic-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "j1",
+              "name": "accountId",
+              "value": "={{ $json.body.account.id }}",
+              "type": "string"
+            },
+            {
+              "id": "j2",
+              "name": "conversationId",
+              "value": "={{ $json.body.conversation.id }}",
+              "type": "string"
+            },
+            {
+              "id": "j3",
+              "name": "message",
+              "value": "={{ $json.body.message.content }}",
+              "type": "string"
+            },
+            {
+              "id": "j4",
+              "name": "isIncoming",
+              "value": "={{ Number($json.body.message.message_type) === 0 }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-chatwoot-08",
+      "name": "Las Chatwoot-falten",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "incoming-check",
+              "leftValue": "={{ $json.isIncoming }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-incoming-08",
+      "name": "Ar inkommande meddelande?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        520,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, skipped: true, reason: 'not_incoming' }) }}",
+        "options": {}
+      },
+      "id": "respond-skipped-08",
+      "name": "Svara: ignorerad",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://flowise:3000/api/v1/prediction/{{$env.FLOWISE_CHATWOOT_CHATFLOW_ID || $env.FLOWISE_SUPPORT_CHATFLOW_ID || $env.FLOWISE_CHATFLOW_ID}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ question: $('Las Chatwoot-falten').first().json.message }) }}",
+        "options": {}
+      },
+      "id": "http-flowise-08",
+      "name": "Fraga Flowise",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "k1",
+              "name": "accountId",
+              "value": "={{ $('Las Chatwoot-falten').first().json.accountId }}",
+              "type": "string"
+            },
+            {
+              "id": "k2",
+              "name": "conversationId",
+              "value": "={{ $('Las Chatwoot-falten').first().json.conversationId }}",
+              "type": "string"
+            },
+            {
+              "id": "k3",
+              "name": "reply",
+              "value": "={{ $json.text || $json.output || $json.data?.text || 'Jag kunde inte formulera ett svar just nu.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-reply-08",
+      "name": "Bygg svar till Chatwoot",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "token-check",
+              "leftValue": "={{ $env.CHATWOOT_API_ACCESS_TOKEN }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-token-08",
+      "name": "Finns Chatwoot-token?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CHATWOOT_API_BASE }}/api/v1/accounts/{{ $json.accountId }}/conversations/{{ $json.conversationId }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "={{ $env.CHATWOOT_API_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.reply, message_type: 'outgoing' }) }}",
+        "options": {}
+      },
+      "id": "http-chatwoot-08",
+      "name": "Skicka svar till Chatwoot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, postedToChatwoot: false, reply: $('Bygg svar till Chatwoot').first().json.reply, note: 'Satt CHATWOOT_API_ACCESS_TOKEN for att skicka svaret tillbaka till Chatwoot.' }) }}",
+        "options": {}
+      },
+      "id": "respond-no-token-08",
+      "name": "Svara: utan Chatwoot-post",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, postedToChatwoot: true, reply: $('Bygg svar till Chatwoot').first().json.reply }) }}",
+        "options": {}
+      },
+      "id": "respond-done-08",
+      "name": "Svara: klart",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1800,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Jämförelse med det stora flödet\n\nDen här versionen är medvetet enklare än ert produktionslika Bosses-flöde.\n\nDet som saknas här är främst:\n- mer robust guard-logik\n- eskalering\n- klassificering\n- felhantering\n\nMen strukturen är redan densamma.",
+        "height": 260,
+        "width": 340,
+        "color": 4
+      },
+      "id": "sticky-progress-08",
+      "name": "Anteckning: progression",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: Chatwoot basic": {
+      "main": [
+        [
+          {
+            "node": "Las Chatwoot-falten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Las Chatwoot-falten": {
+      "main": [
+        [
+          {
+            "node": "Ar inkommande meddelande?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ar inkommande meddelande?": {
+      "main": [
+        [
+          {
+            "node": "Fraga Flowise",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Svara: ignorerad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fraga Flowise": {
+      "main": [
+        [
+          {
+            "node": "Bygg svar till Chatwoot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bygg svar till Chatwoot": {
+      "main": [
+        [
+          {
+            "node": "Finns Chatwoot-token?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finns Chatwoot-token?": {
+      "main": [
+        [
+          {
+            "node": "Skicka svar till Chatwoot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Svara: utan Chatwoot-post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skicka svar till Chatwoot": {
+      "main": [
+        [
+          {
+            "node": "Svara: klart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

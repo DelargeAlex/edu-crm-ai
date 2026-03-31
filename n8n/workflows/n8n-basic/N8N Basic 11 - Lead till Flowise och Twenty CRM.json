@@ -1,0 +1,398 @@
+{
+  "name": "N8N Basic 11 - Lead till Flowise och Twenty CRM",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 11: lead till AI och CRM i samma flöde\n\nDetta är den tydligaste nybörjarbron till ert större Bosses lead flow.\n\nSteg:\n1. lead kommer in\n2. Flowise sammanfattar eller kvalificerar\n3. Twenty skapar person\n4. Twenty skapar affär\n5. webhooken svarar med en enkel summering",
+        "height": 280,
+        "width": 410,
+        "color": 5
+      },
+      "id": "sticky-intro-11",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-flowise-twenty-basic",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-11",
+      "name": "Webhook: lead AI till CRM",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        380
+      ],
+      "webhookId": "lead-flowise-twenty-basic-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1",
+              "name": "firstName",
+              "value": "={{ $json.body.firstName }}",
+              "type": "string"
+            },
+            {
+              "id": "e2",
+              "name": "lastName",
+              "value": "={{ $json.body.lastName }}",
+              "type": "string"
+            },
+            {
+              "id": "e3",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "e4",
+              "name": "company",
+              "value": "={{ $json.body.company }}",
+              "type": "string"
+            },
+            {
+              "id": "e5",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-lead-11",
+      "name": "Normalisera lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://flowise:3000/api/v1/prediction/{{$env.FLOWISE_LEAD_CHATFLOW_ID || $env.FLOWISE_CHATFLOW_ID}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ question: $json.message }) }}",
+        "options": {}
+      },
+      "id": "http-flowise-11",
+      "name": "Fraga Flowise",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "firstName",
+              "value": "={{ $('Normalisera lead').first().json.firstName }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "lastName",
+              "value": "={{ $('Normalisera lead').first().json.lastName }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "email",
+              "value": "={{ $('Normalisera lead').first().json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "company",
+              "value": "={{ $('Normalisera lead').first().json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "f5",
+              "name": "message",
+              "value": "={{ $('Normalisera lead').first().json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "f6",
+              "name": "aiSummary",
+              "value": "={{ $json.text || $json.output || $json.data?.text || 'Flowise returnerade inget svar.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-ai-11",
+      "name": "Samla AI-sammanfattning",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        840,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TWENTY_API_BASE }}/rest/people",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TWENTY_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: { firstName: $('Samla AI-sammanfattning').first().json.firstName, lastName: $('Samla AI-sammanfattning').first().json.lastName }, emails: { primaryEmail: $('Samla AI-sammanfattning').first().json.email } }) }}",
+        "options": {}
+      },
+      "id": "http-person-11",
+      "name": "Skapa person i Twenty",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "g1",
+              "name": "personId",
+              "value": "={{ $json.id || $json.data?.id || $json.record?.id || $json.records?.[0]?.id }}",
+              "type": "string"
+            },
+            {
+              "id": "g2",
+              "name": "firstName",
+              "value": "={{ $('Samla AI-sammanfattning').first().json.firstName }}",
+              "type": "string"
+            },
+            {
+              "id": "g3",
+              "name": "lastName",
+              "value": "={{ $('Samla AI-sammanfattning').first().json.lastName }}",
+              "type": "string"
+            },
+            {
+              "id": "g4",
+              "name": "email",
+              "value": "={{ $('Samla AI-sammanfattning').first().json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "g5",
+              "name": "company",
+              "value": "={{ $('Samla AI-sammanfattning').first().json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "g6",
+              "name": "aiSummary",
+              "value": "={{ $('Samla AI-sammanfattning').first().json.aiSummary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-person-11",
+      "name": "Samla data efter personskapande",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1420,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TWENTY_API_BASE }}/rest/opportunities",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TWENTY_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: ($json.company || ($json.firstName + ' ' + $json.lastName)) + ' / ' + $json.aiSummary, stage: 'NEW', pointOfContactId: $json.personId }) }}",
+        "options": {}
+      },
+      "id": "http-opp-11",
+      "name": "Skapa affar i Twenty",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1700,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'created_with_ai', personId: $('Samla data efter personskapande').first().json.personId, email: $('Samla data efter personskapande').first().json.email, aiSummary: $('Samla data efter personskapande').first().json.aiSummary }) }}",
+        "options": {}
+      },
+      "id": "respond-11",
+      "name": "Svara webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1980,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Närmast originalet\n\nDetta är den tydligaste nybörjarversionen av ert större leadflow eftersom det kombinerar:\n\n- lead in\n- AI-berikning\n- CRM-skapande\n\nDet som fortfarande är förenklat är främst felhantering och detaljerad klassificering.",
+        "height": 260,
+        "width": 340,
+        "color": 4
+      },
+      "id": "sticky-11",
+      "name": "Anteckning: narmast originalet",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: lead AI till CRM": {
+      "main": [
+        [
+          {
+            "node": "Normalisera lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera lead": {
+      "main": [
+        [
+          {
+            "node": "Fraga Flowise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fraga Flowise": {
+      "main": [
+        [
+          {
+            "node": "Samla AI-sammanfattning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Samla AI-sammanfattning": {
+      "main": [
+        [
+          {
+            "node": "Skapa person i Twenty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skapa person i Twenty": {
+      "main": [
+        [
+          {
+            "node": "Samla data efter personskapande",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Samla data efter personskapande": {
+      "main": [
+        [
+          {
+            "node": "Skapa affar i Twenty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skapa affar i Twenty": {
+      "main": [
+        [
+          {
+            "node": "Svara webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

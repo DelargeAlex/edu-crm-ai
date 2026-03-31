@@ -1,0 +1,333 @@
+{
+  "info": {
+    "name": "N8N Basic API",
+    "_postman_id": "f79a5f5d-4a2f-4df8-8e12-4a61d450f2f0",
+    "description": "# N8N Basic API\n\nImportera denna collection i Postman för att testa samtliga webhook-endpoints i `n8n/workflows/n8n-basic`.\n\n## Upplägg\n\n- **Grunder**: webhook-intag och enkel routing\n- **Lead och CRM**: kvalificering, routing, Twenty\n- **Support och AI**: Flowise, Chatwoot, omvägar\n\n## Variabler\n\n- `baseUrl` = `http://localhost:5678`\n- `n8nUser` = `admin`\n- `n8nPass` = `admin`\n\n> Flöde 01 (manuell trigger) har ingen webhook och testas därför inte via Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{n8nUser}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{n8nPass}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5678"
+    },
+    {
+      "key": "n8nUser",
+      "value": "admin"
+    },
+    {
+      "key": "n8nPass",
+      "value": "admin"
+    }
+  ],
+  "item": [
+    {
+      "name": "01-03 Grunder",
+      "description": "Grundläggande webhook-testning för N8N Basic 02 och 03.",
+      "item": [
+        {
+          "name": "02 - basic intake",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maja\",\n  \"email\": \"maja@example.com\",\n  \"message\": \"Hej! Jag vill veta mer.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/basic-intake",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "basic-intake"
+              ]
+            },
+            "description": "Tar emot enkel JSON och svarar med normaliserad payload.\n\nKopplad till: `N8N Basic 02 - Webhook, normalisering och svar.json`"
+          }
+        },
+        {
+          "name": "03 - basic routing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ali\",\n  \"message\": \"Jag har problem med min leverans.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/basic-routing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "basic-routing"
+              ]
+            },
+            "description": "Routar till support, sälj eller allmän kö beroende på meddelandetext.\n\nKopplad till: `N8N Basic 03 - Webhook med enkel routing.json`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04-06 Lead och CRM",
+      "description": "Lead-kvalificering, lead-routing och CRM-skapande i Twenty.",
+      "item": [
+        {
+          "name": "04 - lead basic qualify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nina\",\n  \"email\": \"nina@hotell.se\",\n  \"company\": \"Norrsken Hotell\",\n  \"message\": \"Vi vill ha en offert.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/lead-basic-qualify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "lead-basic-qualify"
+              ]
+            },
+            "description": "Enkel B2B/B2C-kvalificering baserat på om företag finns angivet.\n\nKopplad till: `N8N Basic 04 - Lead in, normalisering och kvalificering.json`"
+          }
+        },
+        {
+          "name": "05 - lead basic route",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Olle\",\n  \"email\": \"olle@byra.se\",\n  \"message\": \"Vi vill ha offert på ett större upplägg.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/lead-basic-route",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "lead-basic-route"
+              ]
+            },
+            "description": "Routar lead till support, sälj, partner eller manuell granskning.\n\nKopplad till: `N8N Basic 05 - Lead routing till salj, support eller partner.json`"
+          }
+        },
+        {
+          "name": "06 - lead to Twenty",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Maja\",\n  \"lastName\": \"Lind\",\n  \"email\": \"maja@hotell.se\",\n  \"company\": \"Aurora Hotel\",\n  \"interest\": \"Zombie Guppy Deluxe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/lead-to-twenty-basic",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "lead-to-twenty-basic"
+              ]
+            },
+            "description": "Skapar person och affär i Twenty.\n\nKräver `TWENTY_API_BASE` och `TWENTY_API_KEY` i n8n.\n\nKopplad till: `N8N Basic 06 - Lead till Twenty CRM.json`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07-08 Support och Chatwoot",
+      "description": "Supportflöden med Flowise och Chatwoot.",
+      "item": [
+        {
+          "name": "07 - support to Flowise",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Bosse\",\n  \"message\": \"Varför rör sig inte min fisk?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/support-flowise-basic",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "support-flowise-basic"
+              ]
+            },
+            "description": "Skickar supportfråga till Flowise och returnerar AI-svar.\n\nKopplad till: `N8N Basic 07 - Supportfraga till Flowise.json`"
+          }
+        },
+        {
+          "name": "08 - Chatwoot basic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": {\n    \"account\": { \"id\": 1 },\n    \"conversation\": { \"id\": 123 },\n    \"message\": {\n      \"message_type\": 0,\n      \"content\": \"Hej! Kan ni hjälpa mig med min order?\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/chatwoot-basic",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "chatwoot-basic"
+              ]
+            },
+            "description": "Tar emot Chatwoot-webhook, skickar fråga till Flowise och postar svar tillbaka om token finns.\n\nKopplad till: `N8N Basic 08 - Chatwoot till Flowise till svar.json`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "09-11 Extra case",
+      "description": "AI-kvalificering, supportomväg och lead till AI + CRM.",
+      "item": [
+        {
+          "name": "09 - lead to Flowise basic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bosse\",\n  \"email\": \"bosse@demo.se\",\n  \"message\": \"Vi vill beställa 18 Zombie Guppy Deluxe till ett hotell.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/lead-flowise-basic",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "lead-flowise-basic"
+              ]
+            },
+            "description": "Skickar leadtext till Flowise för enkel AI-kvalificering.\n\nKopplad till: `N8N Basic 09 - Lead till Flowise for AI-kvalificering.json`"
+          }
+        },
+        {
+          "name": "10 - lead support reroute",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nina\",\n  \"email\": \"nina@example.com\",\n  \"message\": \"Jag har problem med min tidigare beställning.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/lead-support-reroute-basic",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "lead-support-reroute-basic"
+              ]
+            },
+            "description": "Om meddelandet ser ut som support skickas det vidare till supportworkflow.\n\nKopplad till: `N8N Basic 10 - Lead som blir supportomvag.json`"
+          }
+        },
+        {
+          "name": "11 - lead Flowise to Twenty",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Maja\",\n  \"lastName\": \"Lind\",\n  \"email\": \"maja@hotell.se\",\n  \"company\": \"Aurora Hotel\",\n  \"message\": \"Vi vill ha 12 Zombie Guppy Deluxe och undrar om ni kan skicka offert.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/lead-flowise-twenty-basic",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "lead-flowise-twenty-basic"
+              ]
+            },
+            "description": "Kombinerar lead -> Flowise -> Twenty i ett flöde.\n\nKräver både Flowise- och Twenty-variabler i n8n.\n\nKopplad till: `N8N Basic 11 - Lead till Flowise och Twenty CRM.json`"
+          }
+        }
+      ]
+    }
+  ]
+}

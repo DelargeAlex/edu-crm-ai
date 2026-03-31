@@ -1,0 +1,214 @@
+{
+  "name": "N8N Basic 07 - Supportfraga till Flowise",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 7: första AI-steget\n\nHär introduceras Flowise som ett separat lager.\n\nFlödet gör bara det viktigaste:\n1. tar emot en supportfråga\n2. skickar frågan till Flowise\n3. returnerar AI-svaret\n\nDet gör integrationen begriplig innan Chatwoot byggs in.",
+        "height": 250,
+        "width": 380,
+        "color": 5
+      },
+      "id": "sticky-intro-07",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support-flowise-basic",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-flowise-07",
+      "name": "Webhook: support till Flowise",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ],
+      "webhookId": "support-flowise-basic-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "h1",
+              "name": "customerName",
+              "value": "={{ $json.body.customerName }}",
+              "type": "string"
+            },
+            {
+              "id": "h2",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-support-07",
+      "name": "Normalisera supportfraga",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://flowise:3000/api/v1/prediction/{{$env.FLOWISE_SUPPORT_CHATFLOW_ID || $env.FLOWISE_CHATFLOW_ID}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ question: $json.message }) }}",
+        "options": {}
+      },
+      "id": "http-flowise-07",
+      "name": "Fraga Flowise",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "i1",
+              "name": "customerName",
+              "value": "={{ $('Normalisera supportfraga').first().json.customerName }}",
+              "type": "string"
+            },
+            {
+              "id": "i2",
+              "name": "question",
+              "value": "={{ $('Normalisera supportfraga').first().json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "i3",
+              "name": "reply",
+              "value": "={{ $json.text || $json.output || $json.data?.text || 'Flowise returnerade inget svar.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-reply-07",
+      "name": "Samla AI-svar",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'answered', customerName: $json.customerName, question: $json.question, reply: $json.reply }) }}",
+        "options": {}
+      },
+      "id": "respond-flowise-07",
+      "name": "Svara webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Arkitektur-tanken\n\nI det större Bosses-upplägget ligger AI-logiken i Flowise, inte i n8n.\n\nDet gör det lättare att byta prompt eller modell utan att behöva rita om hela workflowet.",
+        "height": 210,
+        "width": 320,
+        "color": 4
+      },
+      "id": "sticky-flowise-07",
+      "name": "Anteckning: AI-lager",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        500,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: support till Flowise": {
+      "main": [
+        [
+          {
+            "node": "Normalisera supportfraga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera supportfraga": {
+      "main": [
+        [
+          {
+            "node": "Fraga Flowise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fraga Flowise": {
+      "main": [
+        [
+          {
+            "node": "Samla AI-svar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Samla AI-svar": {
+      "main": [
+        [
+          {
+            "node": "Svara webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

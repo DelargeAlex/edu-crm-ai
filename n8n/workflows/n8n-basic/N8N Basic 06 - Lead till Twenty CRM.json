@@ -1,0 +1,296 @@
+{
+  "name": "N8N Basic 06 - Lead till Twenty CRM",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Del 6: från lead till CRM\n\nDet här är den första tydliga versionen av ett riktigt affärsflöde:\n\n1. ta emot lead\n2. skapa person i Twenty\n3. skapa affär kopplad till personen\n4. svara tillbaka till den som postade leadet\n\nAllt görs med nativa noder.",
+        "height": 260,
+        "width": 380,
+        "color": 5
+      },
+      "id": "sticky-intro-06",
+      "name": "Anteckning: intro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-to-twenty-basic",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-twenty-06",
+      "name": "Webhook: lead to Twenty",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        360
+      ],
+      "webhookId": "lead-to-twenty-basic-series"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "firstName",
+              "value": "={{ $json.body.firstName }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "lastName",
+              "value": "={{ $json.body.lastName }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "company",
+              "value": "={{ $json.body.company }}",
+              "type": "string"
+            },
+            {
+              "id": "f5",
+              "name": "interest",
+              "value": "={{ $json.body.interest }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-lead-06",
+      "name": "Normalisera lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TWENTY_API_BASE }}/rest/people",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TWENTY_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: { firstName: $('Normalisera lead').first().json.firstName, lastName: $('Normalisera lead').first().json.lastName }, emails: { primaryEmail: $('Normalisera lead').first().json.email } }) }}",
+        "options": {}
+      },
+      "id": "http-person-06",
+      "name": "Skapa person i Twenty",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "g1",
+              "name": "personId",
+              "value": "={{ $json.id || $json.data?.id || $json.record?.id || $json.records?.[0]?.id }}",
+              "type": "string"
+            },
+            {
+              "id": "g2",
+              "name": "firstName",
+              "value": "={{ $('Normalisera lead').first().json.firstName }}",
+              "type": "string"
+            },
+            {
+              "id": "g3",
+              "name": "lastName",
+              "value": "={{ $('Normalisera lead').first().json.lastName }}",
+              "type": "string"
+            },
+            {
+              "id": "g4",
+              "name": "email",
+              "value": "={{ $('Normalisera lead').first().json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "g5",
+              "name": "company",
+              "value": "={{ $('Normalisera lead').first().json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "g6",
+              "name": "interest",
+              "value": "={{ $('Normalisera lead').first().json.interest }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-after-person-06",
+      "name": "Samla data efter personskapande",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        840,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TWENTY_API_BASE }}/rest/opportunities",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TWENTY_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.company ? $json.company + ' / ' + $json.interest : $json.firstName + ' ' + $json.lastName + ' / ' + $json.interest, stage: 'NEW', pointOfContactId: $json.personId }) }}",
+        "options": {}
+      },
+      "id": "http-opportunity-06",
+      "name": "Skapa affar i Twenty",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'created', personId: $('Samla data efter personskapande').first().json.personId, opportunityCreated: true, email: $('Samla data efter personskapande').first().json.email, interest: $('Samla data efter personskapande').first().json.interest }) }}",
+        "options": {}
+      },
+      "id": "respond-twenty-06",
+      "name": "Svara webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1420,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## HTTP till CRM\n\nHär fungerar n8n som orkestrerare mellan två HTTP-anrop.\n\nDet här är samma princip som i större flöden, men utan AI-delen än så länge.",
+        "height": 210,
+        "width": 320,
+        "color": 4
+      },
+      "id": "sticky-http-06",
+      "name": "Anteckning: HTTP till CRM",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        760,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: lead to Twenty": {
+      "main": [
+        [
+          {
+            "node": "Normalisera lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisera lead": {
+      "main": [
+        [
+          {
+            "node": "Skapa person i Twenty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skapa person i Twenty": {
+      "main": [
+        [
+          {
+            "node": "Samla data efter personskapande",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Samla data efter personskapande": {
+      "main": [
+        [
+          {
+            "node": "Skapa affar i Twenty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skapa affar i Twenty": {
+      "main": [
+        [
+          {
+            "node": "Svara webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>n8n Basic-serie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,480;1,9..144,480&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg0: #07111d;
+        --bg1: #11213b;
+        --card: rgba(18, 28, 51, 0.96);
+        --text: #eef6ff;
+        --muted: #acc4d9;
+        --accent: #7cf0ca;
+        --accent2: #ffca76;
+        --accent3: #8db4ff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        font-family: "Source Sans 3", system-ui, sans-serif;
+        background:
+          radial-gradient(1100px 640px at 8% 2%, rgba(46, 83, 149, 0.48), transparent 52%),
+          radial-gradient(900px 540px at 92% 10%, rgba(14, 104, 102, 0.28), transparent 48%),
+          linear-gradient(180deg, var(--bg0), var(--bg1));
+      }
+      header.bar {
+        position: fixed;
+        inset: 0 0 auto 0;
+        padding: 0.7rem 1.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background: rgba(6, 10, 18, 0.76);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 5;
+        font-size: 0.92rem;
+      }
+      .bar kbd {
+        font: inherit;
+        padding: 0.12rem 0.45rem;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .progress {
+        flex: 1;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .progress > i {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+      }
+      main {
+        padding: 4.3rem 1.25rem 2.5rem;
+        max-width: 1160px;
+        margin: 0 auto;
+      }
+      .slide {
+        display: none;
+        padding: 2.2rem 2.15rem 2.4rem;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(18, 28, 52, 0.96), rgba(12, 18, 34, 0.96));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 34px 100px rgba(0, 0, 0, 0.42);
+        min-height: min(74vh, 760px);
+      }
+      .slide.is-active { display: block; }
+      .eyebrow {
+        margin: 0 0 0.8rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      h1, h2, h3 {
+        font-family: "Fraunces", Georgia, serif;
+        line-height: 1.12;
+        margin: 0 0 1rem;
+      }
+      h1 { font-size: clamp(2rem, 3.7vw, 3rem); }
+      h2 { font-size: clamp(1.45rem, 2.8vw, 2.15rem); }
+      h3 { font-size: 1.04rem; }
+      p, li {
+        font-size: 1.06rem;
+        line-height: 1.5;
+        color: color-mix(in oklab, var(--text) 87%, var(--muted));
+      }
+      ul, ol {
+        margin: 0.45rem 0 0;
+        padding-left: 1.2rem;
+      }
+      li { margin: 0.36rem 0; }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.95em;
+      }
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-top: 1rem;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.38rem 0.72rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+      .callout {
+        margin-top: 1.1rem;
+        padding: 1rem 1.1rem;
+        border-radius: 16px;
+        border: 1px dashed rgba(121, 240, 203, 0.36);
+        background: rgba(121, 240, 203, 0.08);
+      }
+      .grid2, .grid3 {
+        display: grid;
+        gap: 1rem 1.2rem;
+        margin-top: 1rem;
+      }
+      .grid2 { grid-template-columns: 1fr 1fr; }
+      .grid3 { grid-template-columns: repeat(3, 1fr); }
+      .box {
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .box h3, .box p { margin-top: 0; }
+      .flow-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0 0;
+      }
+      .flow-list li {
+        margin: 0.65rem 0;
+        padding: 0.8rem 0.9rem;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .flow-list strong { color: var(--text); }
+      .flow-line {
+        margin-top: 1rem;
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.28);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+      .accent { color: var(--accent); }
+      .accent2 { color: var(--accent2); }
+      .accent3 { color: var(--accent3); }
+      @media (max-width: 920px) {
+        .grid3 { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 840px) {
+        .grid2 { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <span><strong>n8n Basic-serie</strong> · progression från grunder till Bosses-flöden</span>
+      <span><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd></span>
+      <span id="count">1 / …</span>
+      <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+    </header>
+
+    <main id="deck" aria-live="polite">
+      <section class="slide is-active" data-title="Start">
+        <p class="eyebrow">n8n Basic-serie</p>
+        <h1>Vi går stegvis från <span class="accent">lead</span> till <span class="accent2">AI</span> och <span class="accent3">Chatwoot</span></h1>
+        <p>
+          Här går vi igenom en enkel n8n-serie som gör det lättare att läsa workflow,
+          förstå noder och följa progressionen från enkel routing till samma tankemodell
+          som i Bosses större flöden.
+        </p>
+        <div class="pill-row">
+          <span class="pill">Inga code-noder</span>
+          <span class="pill">Sticky notes i varje flöde</span>
+          <span class="pill">Allmänt + leadspår</span>
+          <span class="pill">Bygger mot Flowise och Chatwoot</span>
+        </div>
+        <p class="callout">
+          Vi går igenom
+          <strong>vad som kommer in</strong>, <strong>vad som händer i mitten</strong> och
+          <strong>vad som går ut</strong> i varje del av kedjan.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Principer">
+        <p class="eyebrow">Pedagogiska principer</p>
+        <h2>Tre principer bakom hela basic-serien</h2>
+        <div class="grid3">
+          <div class="box">
+            <h3>1. En idé i taget</h3>
+            <p>Varje workflow visar en tydlig kärnidé: trigger, normalisering, routing, AI eller CRM.</p>
+          </div>
+          <div class="box">
+            <h3>2. Native noder</h3>
+            <p>Alla exempel använder n8n:s inbyggda noder så att vi först fokuserar på själva plattformen.</p>
+          </div>
+          <div class="box">
+            <h3>3. Progression</h3>
+            <p>Varje flöde bygger vidare på föregående och förbereder för nästa steg i stacken.</p>
+          </div>
+        </div>
+        <p class="callout">
+          Vi börjar i enkel logik och känner sedan igen samma struktur i mer avancerade flöden.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Progression">
+        <p class="eyebrow">Översikt</p>
+        <h2>Så rör sig serien från grund till full kedja</h2>
+        <div class="flow-line">Manuell trigger
+-> Webhook
+-> Normalisering
+-> Routing
+-> Lead-logik
+-> CRM
+-> Flowise
+-> Chatwoot
+-> Lead + AI + CRM i samma flöde</div>
+        <ul class="flow-list">
+          <li><strong>Flöde 1-3:</strong> lär ut n8n som verktyg.</li>
+          <li><strong>Flöde 4-6:</strong> lär ut lead, kvalificering och CRM.</li>
+          <li><strong>Flöde 7-8:</strong> lär ut AI-lager och chattsvar.</li>
+          <li><strong>Flöde 9-11:</strong> lär ut de broar som mest liknar era nuvarande Bosses-flöden.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-title="Del 1 till 3">
+        <p class="eyebrow">Block 1 · grunder</p>
+        <h2>Flöde 1-3: först lär vi ut hur n8n tänker</h2>
+        <ul class="flow-list">
+          <li><strong>01:</strong> `Manual Trigger`, `Set` och `If` visar input, beslut och två grenar.</li>
+          <li><strong>02:</strong> första riktiga webhooken visar att n8n kan fungera som ett API.</li>
+          <li><strong>03:</strong> enkel routing visar hur samma meddelande kan gå till olika team.</li>
+        </ul>
+        <p class="callout">
+          Här går vi igenom execution-vyn innan externa system introduceras.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Del 4 till 6">
+        <p class="eyebrow">Block 2 · lead och CRM</p>
+        <h2>Flöde 4-6: från lead-in till affärsflöde</h2>
+        <div class="grid3">
+          <div class="box">
+            <h3>04. Kvalificering</h3>
+            <p>Lead normaliseras och märks som B2B eller B2C med enkel regelbaserad logik.</p>
+          </div>
+          <div class="box">
+            <h3>05. Routing</h3>
+            <p>Lead skickas mot sälj, support eller partner beroende på innehåll i meddelandet.</p>
+          </div>
+          <div class="box">
+            <h3>06. Twenty CRM</h3>
+            <p>Lead blir person och affär i CRM så att hela affärsflödet syns i ett verkligt exempel.</p>
+          </div>
+        </div>
+        <p class="callout">
+          Här går vi igenom varför leadflöden inte bara handlar om formulär, utan om att skapa struktur för verkligt arbete.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Del 7 till 8">
+        <p class="eyebrow">Block 3 · AI och supportyta</p>
+        <h2>Flöde 7-8: nu kommer Flowise och Chatwoot in</h2>
+        <ul class="flow-list">
+          <li><strong>07. Support till Flowise:</strong> visar AI-lagret isolerat, utan att blanda in hela chattkedjan direkt.</li>
+          <li><strong>08. Chatwoot till Flowise till svar:</strong> visar nybörjarversionen av hela supportloopen.</li>
+        </ul>
+        <div class="flow-line">Chatwoot webhook
+-> läs fält
+-> kontrollera inkommande meddelande
+-> fråga Flowise
+-> svara tillbaka till Chatwoot</div>
+        <p class="callout">
+          Här blir det tydligt varför ert större Chatwoot-flöde är uppbyggt som det är.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Del 9 till 11">
+        <p class="eyebrow">Block 4 · broar till originalflödena</p>
+        <h2>Flöde 9-11: de extra case som leder rakt mot Bosses-flödena</h2>
+        <div class="grid3">
+          <div class="box">
+            <h3>09. Lead till Flowise</h3>
+            <p>Visar AI-kvalificering av lead som ett eget tydligt steg mellan input och fortsatt hantering.</p>
+          </div>
+          <div class="box">
+            <h3>10. Lead som blir supportomväg</h3>
+            <p>Visar att ett leadformulär kan fånga fel typ av ärende och skicka det vidare till ett annat workflow.</p>
+          </div>
+          <div class="box">
+            <h3>11. Lead till Flowise och Twenty</h3>
+            <p>Visar en enkel end-to-end-version av lead -> AI -> CRM utan code-noder.</p>
+          </div>
+        </div>
+        <p class="callout">
+          Om ni bara ska visa ett flöde som mest liknar `Lead Capture Flow`, är det flöde 11.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Lärarupplägg">
+        <p class="eyebrow">Undervisningsupplägg</p>
+        <h2>Förslag på hur serien kan användas i undervisning</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Pass 1</h3>
+            <ol>
+              <li>Flöde 1-3</li>
+              <li>Fokus på trigger, `Set`, `If`, webhook och execution-vy</li>
+            </ol>
+          </div>
+          <div class="box">
+            <h3>Pass 2</h3>
+            <ol>
+              <li>Flöde 4-6</li>
+              <li>Fokus på lead, routing och CRM</li>
+            </ol>
+          </div>
+          <div class="box">
+            <h3>Pass 3</h3>
+            <ol>
+              <li>Flöde 7-8</li>
+              <li>Fokus på AI-lager, chatt och webhookkedjor</li>
+            </ol>
+          </div>
+          <div class="box">
+            <h3>Pass 4 eller demo</h3>
+            <ol>
+              <li>Flöde 9-11</li>
+              <li>Jämförelse med Bosses stora flöden</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Lässtrategi">
+        <p class="eyebrow">Lässtrategi</p>
+        <h2>Fem frågor vi kan ställa när vi läser ett workflow</h2>
+        <ul class="flow-list">
+          <li><strong>Vad triggar flödet?</strong> Är det manuellt, webhook eller ett annat system?</li>
+          <li><strong>Hur ser inputen ut?</strong> Vilka fält kommer in först?</li>
+          <li><strong>Vilken nod förändrar datan?</strong> Ofta är det `Set` som gör flödet begripligt.</li>
+          <li><strong>Var tas beslut?</strong> Leta efter `If` eller andra villkorsnoder.</li>
+          <li><strong>Vad går ut?</strong> Är resultatet ett svar, ett CRM-objekt eller ett nytt API-anrop?</li>
+        </ul>
+        <p class="callout">
+          Med den här lässtrategin går det att röra sig från basic-serien till de större produktionslika flödena.
+        </p>
+      </section>
+
+      <section class="slide" data-title="Avslut">
+        <p class="eyebrow">Sammanfattning</p>
+        <h2>Basic-serien gör de stora flödena möjliga att förstå</h2>
+        <p>
+          Poängen är inte att de små flödena ska ersätta era nuvarande Bosses-flöden.
+          Poängen är att vi använder dem för att bygga upp den mentala modell som behövs för att förstå dem.
+        </p>
+        <ul>
+          <li>Först går vi igenom n8n:s byggstenar.</li>
+          <li>Sedan går vi igenom leadflöden, routing och CRM.</li>
+          <li>Därefter kommer AI, Chatwoot och workflow-till-workflow-omvägar.</li>
+          <li>Till sist går det att känna igen samma struktur i de större flöden som redan finns.</li>
+        </ul>
+        <p class="callout">
+          Rekommendation: visa alltid ett enkelt flöde först, och öppna sedan det större Bosses-flödet
+          medan ni pekar ut samma delar i mer avancerad form.
+        </p>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const slides = Array.from(document.querySelectorAll(".slide"));
+        const countEl = document.getElementById("count");
+        const prog = document.getElementById("prog");
+        let idx = 0;
+
+        function render() {
+          slides.forEach((s, i) => s.classList.toggle("is-active", i === idx));
+          countEl.textContent = idx + 1 + " / " + slides.length;
+          prog.style.width = ((idx + 1) / slides.length) * 100 + "%";
+          const title = slides[idx].dataset.title || "";
+          document.title = title ? title + " — n8n Basic-serie" : "n8n Basic-serie";
+        }
+
+        function go(delta) {
+          idx = Math.max(0, Math.min(slides.length - 1, idx + delta));
+          render();
+        }
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+            e.preventDefault();
+            go(1);
+          }
+          if (e.key === "ArrowLeft" || e.key === "PageUp") {
+            e.preventDefault();
+            go(-1);
+          }
+          if (e.key === "Home") {
+            e.preventDefault();
+            idx = 0;
+            render();
+          }
+          if (e.key === "End") {
+            e.preventDefault();
+            idx = slides.length - 1;
+            render();
+          }
+        });
+
+        render();
+      })();
+    </script>
+  </body>
+</html>

@@ -10,9 +10,9 @@ services:
     restart: unless-stopped
 
   demo-web:
-    image: node:22-alpine
+    image: nginx:alpine
     working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 8081"
+    command: sh -c "apk add npm && npm install && npm run dev -- --host 0.0.0.0 --port 8081"
     environment:
       # Chatwoot website widget (webbläsaren laddar SDK från denna URL — använd localhost, inte chatwoot-rails)
       VITE_CHATWOOT_BASE_URL: ${VITE_CHATWOOT_BASE_URL:-}
@@ -57,7 +57,8 @@ services:
       FLOWISE_SUPPORT_CHATFLOW_ID: ${FLOWISE_SUPPORT_CHATFLOW_ID:-}
       FLOWISE_CHATWOOT_CHATFLOW_ID: ${FLOWISE_CHATWOOT_CHATFLOW_ID:-}
       # Chatwoot → n8n → Flowise → svar tillbaka (se README + n8n/workflows/chatwoot.json)
-      CHATWOOT_API_BASE: http://chatwoot-rails:3000
+      # Use stable internal alias to avoid DNS lookup issues on some Docker setups.
+      CHATWOOT_API_BASE: http://chatwoot:3000
       CHATWOOT_API_ACCESS_TOKEN: ${CHATWOOT_API_ACCESS_TOKEN:-}
     volumes:
       - n8n_data:/home/node/.n8n
@@ -119,6 +120,11 @@ services:
     # Så Chatwoot-UI kan spara webhooks till en "riktig" domän (host.docker.internal) som når n8n via värdens port 5678
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      default:
+        aliases:
+          - chatwoot
+          - chatwoot-rails
     restart: unless-stopped
 
   chatwoot-sidekiq:
